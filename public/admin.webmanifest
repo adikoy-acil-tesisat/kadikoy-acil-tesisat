@@ -1,0 +1,20 @@
+{
+  "name": "Kadıköy Acil Tesisat Yönetim Paneli",
+  "short_name": "Tesisat Panel",
+  "description": "İş takibi, müşteri kayıtları ve finans yönetimi",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f9fafb",
+  "theme_color": "#1e40af",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "/admin/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
