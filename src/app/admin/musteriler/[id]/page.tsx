@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { toIntlPhone } from "@/lib/date";
+import { vcardOlustur, vcardIndir } from "@/lib/vcard";
 import { HIZMET_TURLERI, DURUM_MAP, ODEME_DURUM_MAP, type Musteri, type Is } from "@/lib/types";
 
 export default function MusteriDetayPage() {
@@ -138,6 +139,13 @@ export default function MusteriDetayPage() {
               <a href={`tel:+${toIntlPhone(customer.telefon)}`} className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-center font-medium text-sm">Ara</a>
               <a href={`https://wa.me/${toIntlPhone(customer.telefon)}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#25d366] text-white py-2.5 rounded-xl text-center font-medium text-sm">WhatsApp</a>
             </div>
+            {/* Rehbere eklenirse arama geldiğinde telefon adı gösterir */}
+            <button
+              onClick={() => vcardIndir(vcardOlustur([customer]), `${customer.ad.replace(/\s+/g, "-")}.vcf`)}
+              className="w-full mt-2 bg-gray-50 text-gray-700 py-2.5 rounded-xl font-medium text-sm border border-gray-200"
+            >
+              📇 Telefon Rehberine Ekle
+            </button>
           </>
         )}
       </div>

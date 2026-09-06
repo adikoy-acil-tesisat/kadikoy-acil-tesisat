@@ -33,12 +33,25 @@ export default function MusterilerPage() {
     };
   }, [ilceFilter]);
 
-  const filtered = search
-    ? customers.filter((c) =>
-        c.ad.toLowerCase().includes(search.toLowerCase()) ||
-        c.telefon.includes(search)
-      )
-    : customers;
+  // Numara aramasında biçim farkı sorun çıkarmasın: "0531 865 38 02",
+  // "+90 531 865 38 02" ve "5318653802" aynı müşteriyi bulmalı.
+  const filtered = (() => {
+    const q = search.trim();
+    if (!q) return customers;
+
+    const qRakam = q.replace(/\D/g, "");
+    const qMetin = q.toLowerCase();
+
+    return customers.filter((c) => {
+      if (c.ad.toLowerCase().includes(qMetin)) return true;
+      if (!qRakam) return false;
+      const numaralar = [c.telefon, c.telefon2]
+        .filter(Boolean)
+        .map((t) => String(t).replace(/\D/g, "").replace(/^(90|0)/, ""));
+      const hedef = qRakam.replace(/^(90|0)/, "");
+      return numaralar.some((n) => n.includes(hedef));
+    });
+  })();
 
   return (
     <div className="p-4 space-y-4">
@@ -54,7 +67,7 @@ export default function MusterilerPage() {
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="İsim veya telefon ile ara..."
+        placeholder="İsim veya telefon ara (0531... / 531... fark etmez)"
         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
       />
 
