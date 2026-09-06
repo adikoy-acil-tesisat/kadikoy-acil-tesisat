@@ -1,0 +1,19 @@
+# Netlify dağıtım ayarları.
+#
+# Bu dosya olmadan Netlify build komutunu ve yayın klasörünü boş bıraktığı için
+# siteyi derlemeden yayınlıyor ve tüm sayfalar 404 dönüyordu.
+
+[build]
+  command = "npm run build"
+  # Next.js çıktısı .next klasöründe üretilir
+  publish = ".next"
+
+[build.environment]
+  # Next.js 16 için Node 20+ gerekiyor; Netlify'ın varsayılanı daha eski olabilir
+  NODE_VERSION = "22"
+
+# Next.js çalışma zamanı: sunucu tarafı sayfaları ve proxy (auth) için gerekli.
+# Netlify normalde otomatik ekler, ancak bu projede algılama devreye girmediği
+# için açıkça belirtiyoruz.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
