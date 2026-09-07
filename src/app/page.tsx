@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SITE_CONFIG, SERVICES, TESTIMONIALS, FAQ_ITEMS } from "@/lib/constants";
+import { SITE_CONFIG, SERVICES, FAQ_ITEMS } from "@/lib/constants";
 import { ONE_CIKAN_MAHALLELER } from "@/lib/mahalleler";
 
 function HeroSection() {
@@ -110,7 +110,7 @@ function ServicesSection() {
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Hizmetlerimiz</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Profesyonel ekipmanlarımız ve uzman ekibimiz ile tüm tesisat sorunlarınıza kalıcı çözümler sunuyoruz.
+            Profesyonel ekipmanlarımız ve 2010’dan gelen tecrübemizle tüm tesisat sorunlarınıza kalıcı çözüm sunuyoruz.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -233,30 +233,53 @@ function DistrictsSection() {
   );
 }
 
-function TestimonialsSection() {
+/**
+ * Şablonla gelen uydurma müşteri yorumlarının yerini alan bölüm.
+ * Gerçek yorumlar birikince buraya onlar konabilir.
+ */
+function SozVerdiklerimizSection() {
+  const sozler = [
+    {
+      baslik: "İşe başlamadan fiyatı söylerim",
+      metin:
+        "Yerinde bakar, ne yapılacağını ve ne tutacağını baştan söylerim. Onay vermeden işe başlamam, iş bitince fiyat değişmez.",
+    },
+    {
+      baslik: "Gereksiz iş çıkarmam",
+      metin:
+        "Boru değişmesi gerekmiyorsa değiştirmem. Açılabilecek bir tıkanıklık için kırım önermem. Gerekeni söyler, gerisini size bırakırım.",
+    },
+    {
+      baslik: "Kırmadan bakarım",
+      metin:
+        "Su kaçağında önce termal kamerayla ararım. Kırım en son çare — ve gerekiyorsa sadece gereken yeri açarım.",
+    },
+    {
+      baslik: "Yeri temiz bırakırım",
+      metin:
+        "İş bitince ortalığı toplarım. Tesisatçı gitti de arkasını siz mi temizlediniz, öyle bir şey olmaz.",
+    },
+  ];
+
   return (
     <section className="py-16 md:py-24 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-5xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Müşteri Yorumları</h2>
-          <p className="text-lg text-gray-600">Müşterilerimizin memnuniyeti bizim için en önemli referanstır.</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Size Ne Söz Veriyorum?</h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Tesisatçıyla ilgili en çok duyulan şikâyetler bunlar. Dördünü de baştan taahhüt ediyorum.
+          </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {TESTIMONIALS.slice(0, 3).map((t, i) => (
-            <div key={i} className="bg-white rounded-2xl p-6 shadow-md">
-              <div className="flex items-center gap-1 mb-3">
-                {[...Array(t.rating)].map((_, j) => (
-                  <svg key={j} xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                ))}
-              </div>
-              <p className="text-gray-600 mb-4 italic">&ldquo;{t.text}&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-primary font-bold text-sm">{t.name.charAt(0)}</span>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {sozler.map((s) => (
+            <div key={s.baslik} className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className="flex items-start gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-                  <p className="text-gray-500 text-xs">{t.district}</p>
+                  <h3 className="font-bold text-gray-900 mb-1.5">{s.baslik}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{s.metin}</p>
                 </div>
               </div>
             </div>
@@ -269,7 +292,7 @@ function TestimonialsSection() {
 
 function WhyUsSection() {
   const reasons = [
-    { icon: "🏆", title: `${SITE_CONFIG.experience} Yıllık Tecrübe`, desc: `${SITE_CONFIG.since}'dan bu yana binlerce müşteriye hizmet verdik` },
+    { icon: "🏆", title: `${SITE_CONFIG.experience} Yıllık Tecrübe`, desc: `${SITE_CONFIG.since}'dan bu yana bu işin içindeyim` },
     { icon: "⚡", title: "Hızlı Müdahale", desc: "30 dakika içinde kapınızdayız" },
     { icon: "🛡️", title: "Garanti", desc: "Tüm işlerimize iş garantisi veriyoruz" },
     { icon: "💰", title: "Uygun Fiyat", desc: "Piyasa fiyatlarının altında kaliteli hizmet" },
@@ -283,7 +306,7 @@ function WhyUsSection() {
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Neden Kadıköy Acil Tesisat?</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Profesyonel ekipman, deneyimli ekip ve müşteri memnuniyeti odaklı hizmet anlayışımız ile fark yaratıyoruz.
+            Profesyonel ekipman, yılların tecrübesi ve müşteri memnuniyeti odaklı çalışma anlayışımızla fark yaratıyoruz.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -371,7 +394,7 @@ export default function Home() {
       <EquipmentSection />
       <DistrictsSection />
       <WhyUsSection />
-      <TestimonialsSection />
+      <SozVerdiklerimizSection />
       <FAQSection />
       <CTASection />
     </>

@@ -12,7 +12,7 @@ export const SITE_CONFIG = {
   address: "İstanbul, Anadolu Yakası",
   since: 2010,
   experience: new Date().getFullYear() - 2010,
-  completedJobs: "5000+",
+  completedJobs: "1000+",
   googleMapsEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d96348.28548975!2d29.0!3d40.98!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cac790b16a0e8d%3A0x4200ef6e2cc1b770!2sKad%C4%B1k%C3%B6y%2F%C4%B0stanbul!5e0!3m2!1str!2str",
   social: {
     instagram: "#",
@@ -51,38 +51,6 @@ export const SERVICES = [
   },
 ];
 
-export const TESTIMONIALS = [
-  {
-    name: "Ahmet Y.",
-    district: "Moda",
-    text: "Gece yarısı tıkanan lavabomuz için aradık, 30 dakikada geldiler. Rothenberger makine ile anında çözdüler. Çok profesyonel bir hizmet!",
-    rating: 5,
-  },
-  {
-    name: "Fatma K.",
-    district: "Caddebostan",
-    text: "Su kaçağı tespiti için geldiler. Termal kamera ile duvarı kırmadan kaçağı buldular. Hem zamandan hem paradan tasarruf ettik.",
-    rating: 5,
-  },
-  {
-    name: "Mehmet B.",
-    district: "Göztepe",
-    text: "Banyo tesisatımızı komple yenilediler. İşçilik çok temiz ve düzenli. Fiyat da çok makuldü. Kesinlikle tavsiye ediyorum.",
-    rating: 5,
-  },
-  {
-    name: "Ayşe D.",
-    district: "Bostancı",
-    text: "Mutfak gideri tıkanmıştı, robot makine ile açtılar. Çok hızlı ve güler yüzlü hizmet. Teşekkür ederiz!",
-    rating: 5,
-  },
-  {
-    name: "Emre S.",
-    district: "Suadiye",
-    text: "Apartmanımızda su kaçağı vardı, kimse bulamıyordu. Termal kamera ile tam yerini tespit ettiler. Profesyonel ekip!",
-    rating: 5,
-  },
-];
 
 export const FAQ_ITEMS = [
   {

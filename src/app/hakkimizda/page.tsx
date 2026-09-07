@@ -8,11 +8,8 @@ export const metadata: Metadata = {
 
 export default function HakkimizdaPage() {
   const milestones = [
-    { year: "2010", text: "Kadıköy'de tesisat hizmetine başladık." },
-    { year: "2014", text: "Rothenberger profesyonel tıkanıklık açma makinemizi aldık." },
-    { year: "2018", text: "Termal kamera su kaçağı tespit cihazımızı hizmete sunduk." },
-    { year: "2020", text: "5000+ başarılı iş sayısına ulaştık." },
-    { year: "2024", text: "Kadıköy genelinde geniş hizmet ağımızı oluşturduk." },
+    { year: "2010", text: "Mesleğe babamın yanında başladım. Tesisatı sahada, iş üstünde öğrendim." },
+    { year: "Bugün", text: "Kadıköy'de kendi işimi yürütüyorum. Aynı titizlik, aynı ustalık." },
   ];
 
   return (
@@ -30,13 +27,20 @@ export default function HakkimizdaPage() {
         <div className="max-w-4xl mx-auto px-4">
           <div className="prose prose-lg max-w-none text-gray-600 space-y-6">
             <p>
-              <strong>Kadıköy Acil Tesisat</strong> olarak {SITE_CONFIG.experience} yıldır Kadıköy&apos;de binlerce ev ve iş yerine
-              tesisat hizmeti vermenin gururunu yaşıyoruz. Moda, Caddebostan, Bostancı, Göztepe, Kozyatağı ve Suadiye
-              başta olmak üzere Kadıköy&apos;ün her mahallesine hızlı ve profesyonel hizmet ulaştırıyoruz.
+              Bu mesleğe <strong>2010 yılında babamın yanında</strong> başladım. Tesisatı okuldan değil,
+              sahada öğrendim — açılmayan giderin başında, su akan dairede, komşusuna zarar vermeden
+              çalışmak zorunda olduğun binalarda. {SITE_CONFIG.experience} yıl sonra bugün Kadıköy&apos;de
+              kendi işimi yürütüyorum.
             </p>
             <p>
-              Mesleğimize olan tutkumuz ve müşteri memnuniyeti odaklı çalışma anlayışımız ile sektörde güvenilir bir isim olduk.
-              Her işimizde kaliteyi ön planda tutarak, en son teknoloji ekipmanlarla hizmet veriyoruz.
+              Moda, Caddebostan, Bostancı, Göztepe, Kozyatağı ve Suadiye başta olmak üzere
+              Kadıköy&apos;ün <strong>21 mahallesinin tamamına</strong> hizmet veriyorum. Her mahallenin
+              yapı stoğu farklı; Moda&apos;daki 60 yıllık dökme demir hatla Kozyatağı&apos;ndaki sitenin
+              yerden ısıtması aynı işi gerektirmiyor. Bunu bilmek işin yarısı.
+            </p>
+            <p>
+              Yaptığım işi anlatırım, fiyatı önceden söylerim, iş bitince yeri temiz bırakırım.
+              Karmaşık bir formülüm yok — sadece bu üçü.
             </p>
 
             <h2 className="text-2xl font-bold text-gray-900 !mt-12 !mb-6">Ekipmanlarımız</h2>
@@ -61,7 +65,7 @@ export default function HakkimizdaPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 !my-8">
               {[
                 { title: "Güvenilirlik", desc: "Söz verdiğimiz saatte gelir, söz verdiğimiz işi yaparız." },
-                { title: "Profesyonellik", desc: "En son teknoloji ekipmanlar ve uzman kadro." },
+                { title: "Profesyonellik", desc: "En son teknoloji ekipmanlar ve yılların tecrübesi." },
                 { title: "Dürüstlük", desc: "Şeffaf fiyatlandırma, sürpriz masraf yok." },
                 { title: "Müşteri Memnuniyeti", desc: "Her müşterimiz bizim referansımızdır." },
               ].map((v) => (

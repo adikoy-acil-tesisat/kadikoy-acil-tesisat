@@ -100,8 +100,9 @@ export default function TikaniklikAcmaPage() {
               Farklı çaplardaki boruya uygun spiral uçları sayesinde boruya zarar vermeden tıkanıklığı açar.
             </p>
             <p>
-              <strong>Kadıköy Acil Tesisat</strong> olarak Rothenberger profesyonel tıkanıklık açma makinemiz ile Kadıköy&apos;de
-              binlerce ev ve işyerine hizmet verdik. Hızlı, temiz ve kalıcı çözüm garantisi sunuyoruz.
+              <strong>Kadıköy Acil Tesisat</strong> olarak Rothenberger profesyonel tıkanıklık açma
+              makinemiz ile Kadıköy&apos;ün 21 mahallesinin tamamında hizmet veriyoruz. Hızlı, temiz
+              ve kalıcı çözüm.
             </p>
           </div>
         </div>
