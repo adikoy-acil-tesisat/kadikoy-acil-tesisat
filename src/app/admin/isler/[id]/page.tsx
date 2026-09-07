@@ -8,6 +8,7 @@ import { dbHataMesaji } from "@/lib/db-error";
 import { toIntlPhone, todayISO } from "@/lib/date";
 import { para, tarihUzun, tarihKisa, saatKisa } from "@/lib/format";
 import { yolTarifiLinki } from "@/lib/harita";
+import IsFotograflari from "@/components/IsFotograflari";
 import {
   HIZMET_TURLERI,
   DURUM_MAP,
@@ -352,6 +353,14 @@ export default function IsDetayPage() {
           )}
         </div>
       )}
+
+      <IsFotograflari
+        isId={isId}
+        fotograflar={job.fotograflar ?? []}
+        hizmetTuru={job.hizmet_turu}
+        mahalle={job.ilce ?? musteri?.ilce ?? null}
+        onDegisti={(yeni) => setJob((prev) => (prev ? { ...prev, fotograflar: yeni } : prev))}
+      />
 
       {/* Tahsilat */}
       <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-3">
