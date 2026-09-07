@@ -259,6 +259,16 @@ function SozVerdiklerimizSection() {
       metin:
         "İş bitince ortalığı toplarım. Tesisatçı gitti de arkasını siz mi temizlediniz, öyle bir şey olmaz.",
     },
+    {
+      baslik: "Yaptığım işin arkasındayım",
+      metin:
+        "Sonradan aynı yerde sorun çıkarsa ücretsiz tekrar gelirim. Kullandığım malzemeler garantili — kırılan, sızdıran parçayı ben değiştiririm.",
+    },
+    {
+      baslik: "Başladığım işi bitiririm",
+      metin:
+        "Bugüne kadar hiçbir işi yarım bırakmadım. Beklenmedik bir sorun çıksa da çözene kadar peşini bırakmam.",
+    },
   ];
 
   return (
@@ -294,7 +304,7 @@ function WhyUsSection() {
   const reasons = [
     { icon: "🏆", title: `${SITE_CONFIG.experience} Yıllık Tecrübe`, desc: `${SITE_CONFIG.since}'dan bu yana bu işin içindeyim` },
     { icon: "⚡", title: "Hızlı Müdahale", desc: "30 dakika içinde kapınızdayız" },
-    { icon: "🛡️", title: "Garanti", desc: "Tüm işlerimize iş garantisi veriyoruz" },
+    { icon: "🛡️", title: "İş Garantisi", desc: "Sorun çıkarsa ücretsiz tekrar gelirim, malzemeler garantili" },
     { icon: "💰", title: "Uygun Fiyat", desc: "Piyasa fiyatlarının altında kaliteli hizmet" },
     { icon: "🔧", title: "Profesyonel Ekipman", desc: "Rothenberger makine ve termal kamera" },
     { icon: "📞", title: "Ücretsiz Keşif", desc: "Ücretsiz yerinde tespit ve fiyat teklifi" },

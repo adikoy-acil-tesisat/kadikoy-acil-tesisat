@@ -74,6 +74,14 @@ export const FAQ_ITEMS = [
     answer: "Evet, tüm tesisat işleri için ücretsiz keşif ve fiyat teklifi sunuyoruz. Bizi arayarak veya WhatsApp'tan yazarak randevu alabilirsiniz.",
   },
   {
+    question: "Yaptığınız işe garanti veriyor musunuz?",
+    answer: "Evet. Yaptığımız işin arkasındayız: aynı yerde sonradan sorun çıkarsa ücretsiz olarak tekrar geliriz. Kullandığımız malzemeler de garantilidir, arızalanan parçayı biz değiştiririz. Bugüne kadar hiçbir işi yarım bırakmadık.",
+  },
+  {
+    question: "Ne kadar sürede geliyorsunuz?",
+    answer: "Kadıköy içindeki adreslere ortalama 30 dakikada ulaşıyoruz. Trafik ve saate göre bu süre değişebilir; aradığınızda size gerçekçi bir varış saati söyleriz.",
+  },
+  {
     question: "Rothenberger makine nedir?",
     answer: "Rothenberger, Almanya merkezli dünyaca ünlü bir tesisat ekipmanı markasıdır. Profesyonel tıkanıklık açma makineleri ile en zorlu gider, kanal ve boru tıkanıklıklarını güvenli şekilde açar.",
   },
