@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { toIntlPhone, todayISO } from "@/lib/date";
 import { para, tarihUzun, tarihKisa, saatKisa } from "@/lib/format";
+import { yolTarifiLinki } from "@/lib/harita";
 import {
   HIZMET_TURLERI,
   DURUM_MAP,
@@ -210,6 +211,11 @@ export default function IsDetayPage() {
   const toplamOdenen = odemeler.reduce((s, o) => s + Number(o.tutar), 0);
   const kalan = job.tutar != null ? Number(job.tutar) - toplamOdenen : null;
 
+  // İşin kendi adresi yoksa müşterinin kayıtlı adresine düşüyoruz
+  const yolTarifi =
+    yolTarifiLinki([job.adres, job.ilce]) ??
+    yolTarifiLinki([musteri?.adres, musteri?.mahalle, musteri?.ilce]);
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -329,6 +335,21 @@ export default function IsDetayPage() {
           {job.aciklama && <p className="text-gray-600">{job.aciklama}</p>}
           {job.adres && <p className="text-gray-500 text-sm">📍 {job.ilce && `${job.ilce} - `}{job.adres}</p>}
           {job.notlar && <p className="text-sm bg-amber-50 text-amber-900 rounded-lg p-3">📝 {job.notlar}</p>}
+
+          {/* Adres iş kaydında yoksa müşterininkine düş */}
+          {yolTarifi && (
+            <a
+              href={yolTarifi}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full bg-gray-900 text-white font-semibold py-3 rounded-xl"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="3 11 22 2 13 21 11 13 3 11" />
+              </svg>
+              Yol Tarifi Al
+            </a>
+          )}
         </div>
       )}
 

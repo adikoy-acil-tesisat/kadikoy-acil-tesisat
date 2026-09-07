@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { dbHataMesaji } from "@/lib/db-error";
+import { yolTarifiLinki } from "@/lib/harita";
 import { todayISO } from "@/lib/date";
 import { para, tarihKisa, gunAdi, saatKisa } from "@/lib/format";
 import { HIZMET_TURLERI, DURUM_MAP, ODEME_DURUM_MAP, type Is } from "@/lib/types";
@@ -17,33 +19,66 @@ const FILTERS = [
 
 type Gorunum = "liste" | "takvim";
 
-function JobCard({ job }: { job: Is }) {
+function JobCard({ job, onDurum }: { job: Is; onDurum: (id: string, durum: string) => void }) {
   const durum = DURUM_MAP[job.durum] || DURUM_MAP.beklemede;
   const odeme = ODEME_DURUM_MAP[job.odeme_durumu] || ODEME_DURUM_MAP.odenmedi;
   const musteri = job.musteri as { ad: string; telefon: string; ilce?: string } | null;
+  const yol = yolTarifiLinki([job.adres, job.ilce ?? musteri?.ilce]);
 
   return (
-    <Link href={`/admin/isler/${job.id}`} className="block bg-white rounded-xl p-4 shadow-sm border border-gray-100 active:bg-gray-50">
-      <div className="flex items-start justify-between mb-2">
-        <div className="min-w-0">
-          <p className="font-semibold text-gray-900 truncate">{musteri?.ad || "—"}</p>
-          <p className="text-sm text-gray-500">
-            {tarihKisa(job.tarih)}
-            {musteri?.ilce && ` • ${musteri.ilce}`}
-            {job.saat && ` • ${saatKisa(job.saat)}`}
-          </p>
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      <Link href={`/admin/isler/${job.id}`} className="block active:opacity-60">
+        <div className="flex items-start justify-between mb-2">
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900 truncate">{musteri?.ad || "—"}</p>
+            <p className="text-sm text-gray-500">
+              {tarihKisa(job.tarih)}
+              {musteri?.ilce && ` • ${musteri.ilce}`}
+              {job.saat && ` • ${saatKisa(job.saat)}`}
+            </p>
+          </div>
+          {job.tutar != null && <span className="font-bold text-gray-900 shrink-0 ml-2">{para(job.tutar)}</span>}
         </div>
-        {job.tutar != null && <span className="font-bold text-gray-900 shrink-0 ml-2">{para(job.tutar)}</span>}
+        {job.aciklama && <p className="text-sm text-gray-500 mb-2 line-clamp-1">{job.aciklama}</p>}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+            {HIZMET_TURLERI[job.hizmet_turu] || job.hizmet_turu}
+          </span>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${durum.bg} ${durum.color}`}>{durum.label}</span>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${odeme.bg} ${odeme.color}`}>{odeme.label}</span>
+        </div>
+      </Link>
+
+      {/* Hızlı eylemler — işi açmadan */}
+      <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+        {job.durum === "beklemede" && (
+          <button
+            onClick={() => onDurum(job.id, "devam_ediyor")}
+            className="flex-1 bg-blue-50 text-blue-700 py-2 rounded-lg text-xs font-semibold"
+          >
+            Başlat
+          </button>
+        )}
+        {job.durum !== "tamamlandi" && job.durum !== "iptal" && (
+          <button
+            onClick={() => onDurum(job.id, "tamamlandi")}
+            className="flex-1 bg-green-50 text-green-700 py-2 rounded-lg text-xs font-semibold"
+          >
+            ✓ Tamamla
+          </button>
+        )}
+        {yol && (
+          <a
+            href={yol}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-xs font-semibold text-center"
+          >
+            Yol Tarifi
+          </a>
+        )}
       </div>
-      {job.aciklama && <p className="text-sm text-gray-500 mb-2 line-clamp-1">{job.aciklama}</p>}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
-          {HIZMET_TURLERI[job.hizmet_turu] || job.hizmet_turu}
-        </span>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${durum.bg} ${durum.color}`}>{durum.label}</span>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${odeme.bg} ${odeme.color}`}>{odeme.label}</span>
-      </div>
-    </Link>
+    </div>
   );
 }
 
@@ -81,6 +116,23 @@ export default function IslerPage() {
       cancelled = true;
     };
   }, [filter]);
+
+  /**
+   * Listeden durum değiştirme. Önce ekranda güncelleyip sonra kaydediyoruz;
+   * kaydetme başarısız olursa eski hâline döndürüyoruz ki ekranda yanlış
+   * bilgi kalmasın.
+   */
+  async function durumDegistir(id: string, yeniDurum: string) {
+    const oncekiler = jobs;
+    setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, durum: yeniDurum } : j)));
+
+    const supabase = createClient();
+    const { error } = await supabase.from("isler").update({ durum: yeniDurum }).eq("id", id);
+    if (error) {
+      setJobs(oncekiler);
+      alert("Durum değiştirilemedi. " + dbHataMesaji(error));
+    }
+  }
 
   const filtered = useMemo(() => {
     if (!search) return jobs;
@@ -180,7 +232,7 @@ export default function IslerPage() {
                     </span>
                   </div>
                   <div className="space-y-2">
-                    {gunIsleri.map((job) => <JobCard key={job.id} job={job} />)}
+                    {gunIsleri.map((job) => <JobCard key={job.id} job={job} onDurum={durumDegistir} />)}
                   </div>
                 </div>
               );
@@ -193,7 +245,7 @@ export default function IslerPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((job) => <JobCard key={job.id} job={job} />)}
+          {filtered.map((job) => <JobCard key={job.id} job={job} onDurum={durumDegistir} />)}
         </div>
       )}
     </div>

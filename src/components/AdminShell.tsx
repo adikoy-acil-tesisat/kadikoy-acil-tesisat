@@ -8,7 +8,7 @@ import { LogoMark } from "@/components/Logo";
 const navItems = [
   { href: "/admin", label: "Panel", icon: "home" },
   { href: "/admin/isler", label: "İşler", icon: "clipboard" },
-  { href: "/admin/isler/yeni", label: "", icon: "plus" },
+  { href: "/admin/hizli", label: "", icon: "plus" },
   { href: "/admin/musteriler", label: "Müşteri", icon: "users" },
   { href: "/admin/finans", label: "Finans", icon: "wallet" },
 ];

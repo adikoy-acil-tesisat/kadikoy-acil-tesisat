@@ -7,12 +7,73 @@ import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { vcardOlustur, vcardIndir } from "@/lib/vcard";
 import { todayISO } from "@/lib/date";
-import type { Musteri } from "@/lib/types";
+import { csvOlustur, csvIndir } from "@/lib/csv";
+import { HIZMET_TURLERI, DURUM_MAP, ODEME_DURUM_MAP, KAYNAKLAR, type Musteri, type Is } from "@/lib/types";
 
 export default function AyarlarPage() {
   const router = useRouter();
   const [aktariliyor, setAktariliyor] = useState(false);
   const [sonuc, setSonuc] = useState("");
+  const [aktarilan, setAktarilan] = useState<"isler" | "musteriler" | null>(null);
+  const [csvSonuc, setCsvSonuc] = useState("");
+
+  async function disaAktar(tur: "isler" | "musteriler") {
+    setAktarilan(tur);
+    setCsvSonuc("");
+    try {
+      const supabase = createClient();
+
+      if (tur === "musteriler") {
+        const { data, error } = await supabase.from("musteriler").select("*").order("ad");
+        if (error) {
+          setCsvSonuc("Alınamadı. " + dbHataMesaji(error));
+          return;
+        }
+        const liste = (data as Musteri[]) || [];
+        const csv = csvOlustur(
+          ["Ad Soyad", "Telefon", "2. Telefon", "Mahalle", "Adres", "Adres Tarifi", "Kaynak", "Notlar", "Kayıt Tarihi"],
+          liste.map((m) => [
+            m.ad, m.telefon, m.telefon2, m.ilce, m.adres, m.adres_tarifi,
+            KAYNAKLAR[m.kaynak ?? ""] ?? m.kaynak,
+            m.notlar, m.olusturma_tarihi?.slice(0, 10),
+          ])
+        );
+        csvIndir(csv, `musteriler-${todayISO()}.csv`);
+        setCsvSonuc(`${liste.length} müşteri aktarıldı.`);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("isler")
+        .select("*, musteri:musteriler(ad, telefon)")
+        .order("tarih", { ascending: false });
+      if (error) {
+        setCsvSonuc("Alınamadı. " + dbHataMesaji(error));
+        return;
+      }
+      const liste = (data as Is[]) || [];
+      const csv = csvOlustur(
+        ["Tarih", "Saat", "Müşteri", "Telefon", "Hizmet", "Mahalle", "Adres", "Tutar", "Durum", "Ödeme", "Açıklama"],
+        liste.map((i) => {
+          const m = i.musteri as { ad?: string; telefon?: string } | null;
+          return [
+            i.tarih, i.saat?.slice(0, 5), m?.ad, m?.telefon,
+            HIZMET_TURLERI[i.hizmet_turu] ?? i.hizmet_turu,
+            i.ilce, i.adres, i.tutar,
+            DURUM_MAP[i.durum]?.label ?? i.durum,
+            ODEME_DURUM_MAP[i.odeme_durumu]?.label ?? i.odeme_durumu,
+            i.aciklama,
+          ];
+        })
+      );
+      csvIndir(csv, `isler-${todayISO()}.csv`);
+      setCsvSonuc(`${liste.length} iş aktarıldı.`);
+    } catch (e) {
+      setCsvSonuc(dbHataMesaji(e));
+    } finally {
+      setAktarilan(null);
+    }
+  }
 
   async function handleLogout() {
     const supabase = createClient();
@@ -86,6 +147,38 @@ export default function AyarlarPage() {
             </p>
           </div>
         </details>
+      </div>
+
+      {/* Yedek / muhasebe çıktısı */}
+      <div className="bg-white rounded-xl p-4 border border-gray-100 space-y-3">
+        <div className="flex items-start gap-3">
+          <span className="text-xl">📊</span>
+          <div>
+            <p className="font-medium text-gray-900">Verileri Excel&apos;e Aktar</p>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Tüm işler ve müşteriler tablo hâlinde iner. Muhasebeciye verebilir, yedek olarak saklayabilirsin.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => disaAktar("isler")}
+            disabled={aktarilan !== null}
+            className="bg-gray-100 disabled:opacity-50 text-gray-800 font-medium py-3 rounded-xl text-sm"
+          >
+            {aktarilan === "isler" ? "Hazırlanıyor..." : "İşler"}
+          </button>
+          <button
+            onClick={() => disaAktar("musteriler")}
+            disabled={aktarilan !== null}
+            className="bg-gray-100 disabled:opacity-50 text-gray-800 font-medium py-3 rounded-xl text-sm"
+          >
+            {aktarilan === "musteriler" ? "Hazırlanıyor..." : "Müşteriler"}
+          </button>
+        </div>
+
+        {csvSonuc && <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">{csvSonuc}</p>}
       </div>
 
       <div className="space-y-2">

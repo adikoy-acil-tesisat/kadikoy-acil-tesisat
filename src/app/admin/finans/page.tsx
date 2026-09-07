@@ -153,7 +153,7 @@ export default function FinansPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">Finans</h1>
+      <div className="flex items-center justify-between"><h1 className="text-xl font-bold text-gray-900">Finans</h1><Link href="/admin/alacaklar" className="text-blue-600 text-sm font-medium">Alacaklar &rarr;</Link></div>
 
       {/* Ay seçici */}
       <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-2">
