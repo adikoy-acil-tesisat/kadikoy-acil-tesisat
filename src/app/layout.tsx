@@ -9,7 +9,7 @@ import MobileBottomBar from "@/components/MobileBottomBar";
 import ScrollToTop from "@/components/ScrollToTop";
 import CookieBanner from "@/components/CookieBanner";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
-import { SITE_CONFIG, SITE_URL} from "@/lib/constants";
+import { SITE_CONFIG, SITE_URL, SERVICES } from "@/lib/constants";
 import { KADIKOY_MAHALLELERI } from "@/lib/mahalleler";
 
 const geistSans = Geist({
@@ -31,21 +31,21 @@ export const metadata: Metadata = {
   description:
     "Kadıköy'de 7/24 profesyonel tesisat hizmeti. Rothenberger makine ile tıkanıklık açma, termal kamera ile kırmadan su kaçağı tespiti. Moda, Caddebostan, Bostancı, Göztepe, Kozyatağı, Suadiye ve tüm Kadıköy. Hemen arayın: 0531 865 38 02",
   keywords: [
-    "tesisatçı istanbul",
-    "tıkanıklık açma",
-    "su kaçağı tespiti",
+    "kadıköy tesisatçı",
+    "acil tesisatçı kadıköy",
+    "tıkanıklık açma kadıköy",
+    "su kaçağı tespiti kadıköy",
     "kırmadan su kaçağı tespiti",
-    "tesisatçı kadıköy",
-    "tesisatçı üsküdar",
-    "tesisatçı ümraniye",
-    "tesisatçı maltepe",
-    "tesisatçı ataşehir",
-    "acil tesisatçı anadolu yakası",
+    "moda tesisatçı",
+    "caddebostan tesisatçı",
+    "bostancı tesisatçı",
+    "göztepe tesisatçı",
+    "kozyatağı tesisatçı",
+    "suadiye tesisatçı",
     "rothenberger tıkanıklık açma",
     "termal kamera su kaçağı",
-    "kanal açma istanbul",
-    "gider açma",
-    "7/24 tesisatçı",
+    "gider açma kadıköy",
+    "7/24 tesisatçı kadıköy",
   ],
   openGraph: {
     title: "Kadıköy Acil Tesisat | 7/24 Tıkanıklık Açma ve Su Kaçağı Tespiti",
@@ -74,11 +74,28 @@ const jsonLd = {
   image: `${SITE_URL}/logo.svg`,
   address: {
     "@type": "PostalAddress",
-    addressLocality: "İstanbul",
+    addressLocality: "Kadıköy",
     addressRegion: "İstanbul",
     addressCountry: "TR",
   },
+  // Dükkânı olmayan, yerinde hizmet veren bir işletme: kesin adres yerine
+  // hizmet bölgesinin merkezi veriliyor.
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 40.9903,
+    longitude: 29.0275,
+  },
   areaServed: KADIKOY_MAHALLELERI.map((m) => ({ "@type": "Place", name: `${m}, Kadıköy, İstanbul` })),
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Tesisat Hizmetleri",
+    itemListElement: SERVICES.map((s) => ({
+      "@type": "Offer",
+      itemOffered: { "@type": "Service", name: s.title, description: s.shortDesc },
+    })),
+  },
+  currenciesAccepted: "TRY",
+  paymentAccepted: "Nakit, Havale/EFT, Kredi Kartı",
   openingHoursSpecification: {
     "@type": "OpeningHoursSpecification",
     dayOfWeek: [

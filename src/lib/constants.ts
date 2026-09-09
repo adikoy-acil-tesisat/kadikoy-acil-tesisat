@@ -9,7 +9,7 @@ export const SITE_CONFIG = {
   whatsapp: "905318653802",
   whatsappMessage: "Merhaba, tesisat hizmeti almak istiyorum.",
   email: "info@kadikoyaciltesisat.com",
-  address: "İstanbul, Anadolu Yakası",
+  address: "Kadıköy, İstanbul",
   since: 2010,
   experience: new Date().getFullYear() - 2010,
   completedJobs: "1000+",

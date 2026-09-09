@@ -54,6 +54,33 @@ export function fotografiKucult(dosya: File): Promise<Blob> {
 }
 
 /**
+ * Depolama hatalarını, kullanıcının ne yapacağını bilebileceği hâle çevirir.
+ * Ham Supabase mesajları ("Bucket not found") tek başına yol göstermiyor.
+ */
+function yuklemeHatasi(mesaj: string): string {
+  const m = mesaj.toLowerCase();
+  if (m.includes("bucket not found") || m.includes("nosuchbucket")) {
+    return (
+      "Depolama alanı bulunamadı. Supabase panelinde Storage bölümüne girip " +
+      `"${KOVA}" adında herkese açık (public) bir kova oluşturun.`
+    );
+  }
+  if (m.includes("row-level security") || m.includes("unauthorized") || m.includes("403")) {
+    return (
+      "Yükleme izniniz yok. supabase-galeri.sql dosyasındaki depolama " +
+      "politikalarının çalıştırıldığından ve panele giriş yapmış olduğunuzdan emin olun."
+    );
+  }
+  if (m.includes("payload too large") || m.includes("exceeded the maximum")) {
+    return "Dosya çok büyük. Daha küçük bir fotoğraf deneyin.";
+  }
+  if (m.includes("mime") || m.includes("content type")) {
+    return "Bu dosya türü kabul edilmiyor. JPG veya PNG bir fotoğraf seçin.";
+  }
+  return mesaj;
+}
+
+/**
  * Fotoğrafı yükler ve herkese açık URL'ini döndürür.
  * Dosya adı rastgeledir; tahmin edilemesin diye.
  */
@@ -66,7 +93,7 @@ export async function fotografYukle(dosya: File): Promise<string> {
     contentType: "image/jpeg",
     cacheControl: "31536000", // fotoğraf değişmez, uzun süre önbelleklensin
   });
-  if (error) throw error;
+  if (error) throw new Error(yuklemeHatasi(error.message));
 
   const { data } = supabase.storage.from(KOVA).getPublicUrl(ad);
   return data.publicUrl;
