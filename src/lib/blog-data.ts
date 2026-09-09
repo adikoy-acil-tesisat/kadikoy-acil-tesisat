@@ -278,6 +278,177 @@ Eğer boru donmuşsa:
 
 Boru donması veya patlaması durumunda Kadıköy'de 7/24 acil tesisat hizmeti veriyoruz. Hemen arayın!`,
   },
+  {
+    slug: "kadikoy-eski-bina-tesisati",
+    title: "Kadıköy'de Eski Bina Tesisatı: Dökme Demir ve Galvaniz Boru Sorunları",
+    excerpt:
+      "Moda, Caferağa ve Rasimpaşa gibi eski mahallelerdeki binalarda tesisat sorunları neden sürekli tekrar eder? Dökme demir ve galvaniz boruların ömrü, belirtileri ve ne zaman değişmesi gerektiği.",
+    category: "Bilgi",
+    date: "2026-08-20",
+    color: "bg-amber-50",
+    content: `Kadıköy'ün Moda, Caferağa, Rasimpaşa ve Zühtüpaşa gibi mahallelerinde binaların önemli bir kısmı 1930-1970 arası yapıldı. Bu binaların çoğu hâlâ ilk günkü tesisatını taşıyor. Aynı tıkanıklığın üç ayda bir tekrar etmesinin sebebi genelde bu.
+
+## Bu binalarda hangi borular var?
+
+Dönemin iki standart malzemesi kullanıldı:
+
+**Pis su hatları — dökme demir.** Sağlam bir malzeme, 50-80 yıl dayanabiliyor. Ama iç yüzeyi pürüzlü olduğu için zamanla pas ve yağ tutuyor. Boru dışarıdan sapasağlam görünürken içeriden daralıyor.
+
+**Temiz su hatları — galvanizli çelik.** Çinko kaplama zamanla aşınıyor ve altındaki demir paslanmaya başlıyor. Pas boru içine doğru büyüdüğü için hem su geçişi azalıyor hem musluktan kızıl renkli su geliyor.
+
+## Nasıl anlarsınız?
+
+Aşağıdakilerden birkaçı bir aradaysa büyük ihtimalle boru daralması var:
+
+- Tıkanıklık açtırıyorsunuz, birkaç ay sonra aynı yerde tekrarlıyor
+- Musluğu ilk açtığınızda su kızıl/kahverengi akıyor, sonra düzeliyor
+- Su basıncı yıllar içinde gözle görülür şekilde düştü
+- Alt komşuya rutubet vuruyor ama görünür bir sızıntı yok
+- Sıcak su hattı soğuktan daha zayıf akıyor
+
+Son madde önemli: sıcak su borularda korozyon daha hızlı ilerlediği için önce o hat zayıflar.
+
+## Açmak mı, değiştirmek mi?
+
+Burada dürüst olmak gerekiyor. Daralmış bir dökme demir hattı profesyonel makineyle açmak mümkün — biriken tabakayı kazıyıp geçişi yeniden sağlıyoruz. Ama boru et kalınlığını kaybetmişse bu geçici bir çözüm olur.
+
+| Durum | Yapılması gereken |
+|-------|-------------------|
+| Boru sağlam, sadece birikinti var | Makineyle açma yeterli |
+| Kesitin yarısına yakını dolmuş | Açma + yakın takip |
+| Boru delinmiş, et kalınlığı bitmiş | Değişim şart |
+
+Farkı anlamanın yolu kamerayla bakmak. Makineyle açtıktan sonra hattın içini görüp size gerçek durumu söylüyoruz — değişmesi gerekmiyorsa değiştirmeyi önermiyoruz.
+
+## Eski binada çalışırken dikkat ettiklerimiz
+
+Bu binaların kendine özgü zorlukları var:
+
+- **Dar sokak ve asansörsüz giriş** — Moda'nın birçok sokağına araçla giremiyoruz, ekipmanı elle taşıyoruz. Randevu planlarken bunu hesaba katıyoruz.
+- **Ortak kolon hatları** — bir dairede yaptığınız işlem üst ve alt katları etkiliyor. Tek daireye müdahale çoğu zaman sorunu geri getiriyor; kolonun tamamına bakmak gerekiyor.
+- **Kırılgan bağlantılar** — 60 yıllık bir rakoru sertçe zorlarsanız kırılır. Bu binalarda acele etmemek, sabırlı çalışmak gerekiyor.
+
+## Kadıköy Acil Tesisat
+
+Kadıköy'ün eski yapı stoğunu tanıyoruz. Tıkanıklığı açar, borunun gerçek durumunu söyler, gereksiz iş çıkarmayız. 7/24 arayabilirsiniz.`,
+  },
+  {
+    slug: "tikaniklik-neden-tekrarliyor",
+    title: "Tıkanıklık Sürekli Tekrarlıyorsa Sebebi Ne?",
+    excerpt:
+      "Aynı gider birkaç ayda bir tekrar tıkanıyorsa sorun tıkanıklıkta değil, hatta. Tekrar eden tıkanıklığın altı sebebi ve her birinin kalıcı çözümü.",
+    category: "Tıkanıklık Açma",
+    date: "2026-08-10",
+    color: "bg-blue-50",
+    content: `Tıkanıklık açtırdınız, iki ay sonra aynı gider yine tıkandı. Bu, işin kötü yapıldığı anlamına gelmeyebilir — çoğu zaman altta yatan başka bir sebep vardır ve o çözülmedikçe tıkanıklık geri gelir.
+
+## 1. Boru daralmış
+
+En yaygın sebep. Yıllar içinde boru iç yüzeyinde yağ, kireç ve pas birikiyor. Kesit daraldığı için normalde geçecek atık takılıyor.
+
+**Belirtisi:** Açtırdıktan sonra su ilk günler hızlı akıyor, sonra yavaşlıyor ve tekrar tıkanıyor.
+
+**Çözümü:** Yüzeysel açma yerine hattın komple temizlenmesi. Boru ciddi şekilde kayıp vermişse değişim.
+
+## 2. Yanlış eğim
+
+Gider borusunun akış yönünde belirli bir eğimi olması gerekir. Tadilat sırasında hat yanlış döşendiyse ya da bina oturmuşsa eğim bozulur; su akar ama katı atık boruda kalır.
+
+**Belirtisi:** Tıkanıklık hep aynı noktada, düzenli aralıklarla tekrarlıyor.
+
+**Çözümü:** Hattın o bölümünün yeniden döşenmesi. Geçici çözüm yok.
+
+## 3. Kök girmesi
+
+Bahçeli binalarda ağaç kökleri boru eklerindeki küçük çatlaklardan içeri giriyor ve zamanla hattı tamamen kapatıyor. Göztepe ve Suadiye gibi bahçeli bölgelerde sık karşılaştığımız bir durum.
+
+**Belirtisi:** Yavaş yavaş kötüleşen, açıldıktan sonra birkaç ay iyi giden ama mutlaka geri gelen tıkanıklık.
+
+**Çözümü:** Kökleri kesmek geçici çözüm; kalıcı çözüm o bölümün değişmesi.
+
+## 4. Ortak kolon hattı
+
+Apartmanda tıkanıklık tek dairede değil, ortak dikey hatta olabilir. Sizin daireniz açılır, hat dolu kaldığı için kısa sürede geri döner.
+
+**Belirtisi:** Aynı anda birden fazla dairede yavaşlama; alt katta daha belirgin.
+
+**Çözümü:** Kolonun tamamının açılması. Bu, yönetimle konuşulması gereken bir iş.
+
+## 5. Yağ birikmesi
+
+Mutfak giderine dökülen sıvı yağ boruda soğuyup katılaşıyor. Özellikle alt katları restoran olan binalarda hat çok hızlı doluyor.
+
+**Belirtisi:** Sadece mutfak gideri tıkanıyor, banyo sorunsuz.
+
+**Çözümü:** Hattın temizlenmesi ve alışkanlık değişikliği — yağ lavaboya değil çöpe.
+
+## 6. Yanlış kullanım
+
+Islak mendil, kedi kumu, saç, pamuk. Bunların hiçbiri suda çözünmüyor. "Suda çözünür" yazan ıslak mendiller de dahil.
+
+**Belirtisi:** Ani ve tam tıkanma.
+
+**Çözümü:** Açma + neyin atılmaması gerektiğinin bilinmesi.
+
+## Nasıl ayırt ediyoruz?
+
+Tekrar eden bir tıkanıklıkta önce sebebi bulmaya çalışıyoruz. Hattı açtıktan sonra kamerayla içine bakmak, sorunun daralma mı, eğim mi, kök mü olduğunu gösteriyor. Sebebi bilmeden yapılan her müdahale birkaç ay sonra tekrarlanacak demektir.
+
+Size hattın gerçek durumunu söyleriz — değişim gerekiyorsa gerektiğini, gerekmiyorsa gerekmediğini.`,
+  },
+  {
+    slug: "yerden-isitma-su-kacagi",
+    title: "Yerden Isıtmada Su Kaçağı: Zemini Kırmadan Nasıl Bulunur?",
+    excerpt:
+      "Yerden ısıtmalı dairede kaçak, şapın altında olduğu için gözle görülmez. Termal kamerayla noktayı bulup sadece o bölgeyi açmak, tüm zemini kırmaktan çok daha ucuza mal olur.",
+    category: "Su Kaçağı Tespiti",
+    date: "2026-07-28",
+    color: "bg-teal-50",
+    content: `Yerden ısıtma, Kadıköy'ün yenilenmiş dairelerinde ve Kozyatağı, Caddebostan gibi bölgelerin sitelerinde çok yaygın. Konfor açısından iyi bir sistem — ama bir kaçak oluştuğunda boru şapın altında olduğu için gözle bulunamıyor.
+
+## Kaçak olduğunu nasıl anlarsınız?
+
+- **Kombi basıncı sürekli düşüyor.** Su ekliyorsunuz, birkaç gün sonra yine düşüyor. En net belirti budur.
+- **Zeminde belirli bir bölge diğerlerinden sıcak.** Kaçan sıcak su o noktada birikiyor.
+- **Parke kabarmış veya renk değiştirmiş.**
+- **Isıtma eskisi kadar ısıtmıyor**, bazı odalar geç ısınıyor.
+- **Su faturası açıklanamayan şekilde artmış.**
+
+Kombi basıncının düşmesi tek başına kaçak anlamına gelmez — peteklerde hava olması da basıncı düşürür. Ama hava aldıktan sonra da düşmeye devam ediyorsa hatta kaçak var demektir.
+
+## Klasik yöntemin maliyeti
+
+Termal kamera olmadan yapılan tespit, tahmine dayanır: en olası bölge açılır, çıkmazsa bir sonraki denenir. Sonuç genelde şu olur:
+
+| Yöntem | Kırılan alan | Sonrasında |
+|--------|--------------|------------|
+| Tahminle arama | Birkaç metrekare, bazen daha fazla | Zemin kaplaması komple yenilenir |
+| Termal kamerayla tespit | 30-50 cm'lik tek bölge | Sadece o parça onarılır |
+
+Mermer, doğal taş veya özel parke döşenmiş bir dairede aradaki fark, kaçağın onarım bedelinden çok daha yüksek olabiliyor.
+
+## Termal kamera nasıl çalışıyor?
+
+Kaçan sıcak su, zeminde çevresinden daha sıcak bir bölge oluşturuyor. Termal kamera bu ısı farkını görüntülüyor. Sistemi bir süre çalıştırıp zemini taradığımızda kaçak noktası ekranda net şekilde beliriyor.
+
+İşlem sırası şöyle:
+
+- Sistemi çalıştırıp hattın ısınmasını bekliyoruz
+- Zemini kamerayla bölge bölge tarıyoruz
+- Isı yoğunlaşmasının en yüksek olduğu noktayı işaretliyoruz
+- Gerekirse basınç testiyle doğruluyoruz
+- Sadece işaretlenen noktayı açıyoruz
+
+## Onarım
+
+Kaçak noktası bulunduktan sonra iki yol var: boruya ek yapmak veya o bölümü komple değiştirmek. Hangisinin uygun olduğunu boruyu gördükten sonra söylüyoruz — tesisatın yaşına ve hasarın büyüklüğüne bağlı.
+
+Onarım sonrası sistemi basınçlandırıp bir süre gözlemliyoruz; basınç sabit kalıyorsa iş tamamdır.
+
+## Kadıköy Acil Tesisat
+
+Yerden ısıtma kaçağında zemini kırmadan tespit yapıyoruz. Kadıköy'ün her mahallesinde, 7/24.`,
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {

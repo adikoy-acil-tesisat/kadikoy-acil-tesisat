@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
+import { fotografYukle } from "@/lib/foto";
 import { todayISO, toIntlPhone } from "@/lib/date";
 import { para, ayAdi, tarihKisa } from "@/lib/format";
 import { HIZMET_TURLERI, GIDER_KATEGORILERI, type Is, type Gider } from "@/lib/types";
@@ -46,6 +47,7 @@ export default function FinansPage() {
   const [giderAcik, setGiderAcik] = useState("");
   const [giderTutar, setGiderTutar] = useState("");
   const [giderSaving, setGiderSaving] = useState(false);
+  const [fisDosya, setFisDosya] = useState<File | null>(null);
 
   const yukle = useCallback(async () => {
     const supabase = createClient();
@@ -87,21 +89,44 @@ export default function FinansPage() {
       return;
     }
     setGiderSaving(true);
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("giderler")
-      .insert({ kategori: giderKat, aciklama: giderAcik.trim(), tutar: tutarSayi, tarih: todayISO() })
-      .select()
-      .single();
-    if (error || !data) {
-      alert("Gider kaydedilemedi. " + dbHataMesaji(error));
-    } else {
+
+    try {
+      // Fiş seçildiyse önce yükle; yüklenemezse gider yine de kaydedilsin
+      let fisUrl: string | null = null;
+      if (fisDosya) {
+        try {
+          fisUrl = await fotografYukle(fisDosya);
+        } catch (e) {
+          alert("Fiş yüklenemedi, gider fişsiz kaydedilecek. " + dbHataMesaji(e));
+        }
+      }
+
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("giderler")
+        .insert({
+          kategori: giderKat,
+          aciklama: giderAcik.trim(),
+          tutar: tutarSayi,
+          tarih: todayISO(),
+          fis_url: fisUrl,
+        })
+        .select()
+        .single();
+
+      if (error || !data) {
+        alert("Gider kaydedilemedi. " + dbHataMesaji(error));
+        return;
+      }
+
       setExpenses((prev) => [data as Gider, ...prev]);
       setGiderAcik("");
       setGiderTutar("");
+      setFisDosya(null);
       setShowExpenseForm(false);
+    } finally {
+      setGiderSaving(false);
     }
-    setGiderSaving(false);
   }
 
   async function giderSil(g: Gider) {
@@ -288,6 +313,30 @@ export default function FinansPage() {
                   </select>
                   <input type="text" value={giderAcik} onChange={(e) => setGiderAcik(e.target.value)} placeholder="Açıklama *" className="w-full px-3 py-2.5 border rounded-xl text-sm" />
                   <input type="number" inputMode="numeric" value={giderTutar} onChange={(e) => setGiderTutar(e.target.value)} placeholder="Tutar (₺) *" className="w-full px-3 py-2.5 border rounded-xl text-sm" />
+
+                  {/* Fiş fotoğrafı — muhasebe ve gider ispatı için */}
+                  <label className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 cursor-pointer">
+                    <span className="text-sm text-gray-600 truncate">
+                      {fisDosya ? `🧾 ${fisDosya.name}` : "🧾 Fiş fotoğrafı ekle (isteğe bağlı)"}
+                    </span>
+                    {fisDosya ? (
+                      <span
+                        onClick={(e) => { e.preventDefault(); setFisDosya(null); }}
+                        className="text-red-500 text-xs font-medium shrink-0"
+                      >
+                        Kaldır
+                      </span>
+                    ) : (
+                      <span className="text-blue-600 text-xs font-medium shrink-0">Seç</span>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => setFisDosya(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+
                   <button onClick={addExpense} disabled={giderSaving} className="w-full bg-red-600 disabled:bg-red-400 text-white py-2.5 rounded-xl font-medium text-sm">
                     {giderSaving ? "Kaydediliyor..." : "Gideri Kaydet"}
                   </button>
@@ -300,7 +349,22 @@ export default function FinansPage() {
                 <div key={e.id} className="flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100">
                   <div className="min-w-0">
                     <p className="font-medium text-sm text-gray-900 truncate">{e.aciklama}</p>
-                    <p className="text-xs text-gray-500">{tarihKisa(e.tarih)} • {GIDER_KATEGORILERI[e.kategori] || e.kategori}</p>
+                    <p className="text-xs text-gray-500">
+                      {tarihKisa(e.tarih)} • {GIDER_KATEGORILERI[e.kategori] || e.kategori}
+                      {e.fis_url && (
+                        <>
+                          {" • "}
+                          <a
+                            href={e.fis_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 font-medium"
+                          >
+                            🧾 Fiş
+                          </a>
+                        </>
+                      )}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 ml-2">
                     <span className="font-bold text-red-600">-{para(e.tutar)}</span>

@@ -51,6 +51,8 @@ export interface Gider {
   aciklama: string;
   tutar: number;
   tarih: string;
+  /** Fiş fotoğrafının adresi — muhasebe ve gider ispatı için. */
+  fis_url?: string | null;
   olusturma_tarihi: string;
 }
 
