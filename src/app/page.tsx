@@ -305,7 +305,7 @@ function WhyUsSection() {
     { icon: "🏆", title: `${SITE_CONFIG.experience} Yıllık Tecrübe`, desc: `${SITE_CONFIG.since}'dan bu yana bu işin içindeyim` },
     { icon: "⚡", title: "Hızlı Müdahale", desc: "30 dakika içinde kapınızdayız" },
     { icon: "🛡️", title: "İş Garantisi", desc: "Sorun çıkarsa ücretsiz tekrar gelirim, malzemeler garantili" },
-    { icon: "💰", title: "Uygun Fiyat", desc: "Piyasa fiyatlarının altında kaliteli hizmet" },
+    { icon: "💰", title: "Şeffaf Fiyat", desc: "Fiyatı işe başlamadan söylerim, sonradan değişmez" },
     { icon: "🔧", title: "Profesyonel Ekipman", desc: "Rothenberger makine ve termal kamera" },
     { icon: "📞", title: "Ücretsiz Keşif", desc: "Ücretsiz yerinde tespit ve fiyat teklifi" },
   ];

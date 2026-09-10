@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/hizmetlerimiz/genel-tesisat`, changeFrequency: "monthly" as const, priority: 0.8 },
     { url: `${BASE_URL}/hizmetlerimiz/tamir-montaj`, changeFrequency: "monthly" as const, priority: 0.8 },
     { url: `${BASE_URL}/hizmet-bolgeleri`, changeFrequency: "monthly" as const, priority: 0.8 },
+    { url: `${BASE_URL}/fiyatlar`, changeFrequency: "monthly" as const, priority: 0.8 },
     { url: `${BASE_URL}/galeri`, changeFrequency: "monthly" as const, priority: 0.6 },
     { url: `${BASE_URL}/sss`, changeFrequency: "monthly" as const, priority: 0.6 },
     { url: `${BASE_URL}/iletisim`, changeFrequency: "monthly" as const, priority: 0.7 },

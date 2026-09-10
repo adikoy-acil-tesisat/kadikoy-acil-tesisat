@@ -78,6 +78,7 @@ export default function Header() {
                 </div>
               </div>
 
+              <Link href="/fiyatlar" className="text-gray-700 hover:text-primary font-medium transition-colors">Fiyatlar</Link>
               <Link href="/hakkimizda" className="text-gray-700 hover:text-primary font-medium transition-colors">Hakkımızda</Link>
               <Link href="/galeri" className="text-gray-700 hover:text-primary font-medium transition-colors">Galeri</Link>
               <Link href="/blog" className="text-gray-700 hover:text-primary font-medium transition-colors">Blog</Link>
@@ -138,6 +139,7 @@ export default function Header() {
                 </div>
               )}
 
+              <Link href="/fiyatlar" onClick={() => setMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Fiyatlar</Link>
               <Link href="/hakkimizda" onClick={() => setMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Hakkımızda</Link>
               <Link href="/galeri" onClick={() => setMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Galeri</Link>
               <Link href="/blog" onClick={() => setMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Blog</Link>

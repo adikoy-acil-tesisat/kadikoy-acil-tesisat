@@ -56,6 +56,7 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-bold text-lg mb-4">Hızlı Bağlantılar</h3>
             <ul className="space-y-2">
+              <li><Link href="/fiyatlar" className="hover:text-white transition-colors text-sm">Fiyatlar</Link></li>
               <li><Link href="/hakkimizda" className="hover:text-white transition-colors text-sm">Hakkımızda</Link></li>
               <li><Link href="/galeri" className="hover:text-white transition-colors text-sm">Galeri</Link></li>
               <li><Link href="/blog" className="hover:text-white transition-colors text-sm">Blog</Link></li>

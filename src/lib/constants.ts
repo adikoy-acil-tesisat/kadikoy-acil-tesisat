@@ -85,6 +85,10 @@ export const FAQ_ITEMS = [
     answer: "Evet, tüm tesisat işleri için ücretsiz keşif ve fiyat teklifi sunuyoruz. Bizi arayarak veya WhatsApp'tan yazarak randevu alabilirsiniz.",
   },
   {
+    question: "Fiyatlarınız ne kadar?",
+    answer: "Sabit fiyat listesi vermiyoruz, çünkü aynı isimli iki iş aynı iş olmayabilir. Lavabo tıkanıklığı bazen sifonda basit bir birikintidir, bazen ortak kolon hattındaki bir sorundur; biri 15 dakika, diğeri iki saat sürer. Fiyatı belirleyen üç şey var: işin gerçek kapsamı, kullanılacak malzeme ve süre. Ücretsiz keşfe gelir, ne yapılacağını ve ne tutacağını baştan söyleriz. Onay vermezseniz keşif için de bir ücret ödemezsiniz, iş bitince de konuştuğumuz rakam değişmez.",
+  },
+  {
     question: "Yaptığınız işe garanti veriyor musunuz?",
     answer: "Evet. Yaptığımız işin arkasındayız: aynı yerde sonradan sorun çıkarsa ücretsiz olarak tekrar geliriz. Kullandığımız malzemeler de garantilidir, arızalanan parçayı biz değiştiririz. Bugüne kadar hiçbir işi yarım bırakmadık.",
   },
