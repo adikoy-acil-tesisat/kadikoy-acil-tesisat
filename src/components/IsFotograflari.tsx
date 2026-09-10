@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
-import { fotografYukle, fotografSil } from "@/lib/foto";
+import { fotografYukle, fotografSil, type YuklemeHatasi } from "@/lib/foto";
 import { HIZMET_TURLERI } from "@/lib/types";
 
 interface Props {
@@ -27,12 +27,15 @@ export default function IsFotograflari({ isId, fotograflar, hizmetTuru, mahalle,
   const [yukleniyor, setYukleniyor] = useState(false);
   const [ilerleme, setIlerleme] = useState("");
   const [yayinlanan, setYayinlanan] = useState<Set<string>>(new Set());
+  // Hata alert() ile gösteriliyordu; telefonda okunup kapanıyor, kopyalanamıyordu.
+  const [hata, setHata] = useState<{ mesaj: string; ham?: string } | null>(null);
 
   async function dosyaSecildi(e: React.ChangeEvent<HTMLInputElement>) {
     const dosyalar = Array.from(e.target.files ?? []);
     if (dosyalar.length === 0) return;
 
     setYukleniyor(true);
+    setHata(null);
     const yeniUrller: string[] = [];
 
     try {
@@ -48,7 +51,13 @@ export default function IsFotograflari({ isId, fotograflar, hizmetTuru, mahalle,
 
       onDegisti(hepsi);
     } catch (err) {
-      alert("Fotoğraf yüklenemedi. " + dbHataMesaji(err));
+      setHata({ mesaj: dbHataMesaji(err), ham: (err as YuklemeHatasi)?.ham });
+      // Yarısı yüklendiyse onlar kaybolmasın
+      if (yeniUrller.length > 0) {
+        const hepsi = [...fotograflar, ...yeniUrller];
+        await createClient().from("isler").update({ fotograflar: hepsi }).eq("id", isId);
+        onDegisti(hepsi);
+      }
     } finally {
       setYukleniyor(false);
       setIlerleme("");
@@ -67,7 +76,7 @@ export default function IsFotograflari({ isId, fotograflar, hizmetTuru, mahalle,
       // Depodaki dosyayı da temizle; başarısız olursa kayıt yine de silinmiş olur
       await fotografSil(url).catch(() => {});
     } catch (err) {
-      alert("Silinemedi. " + dbHataMesaji(err));
+      setHata({ mesaj: "Silinemedi. " + dbHataMesaji(err) });
     }
   }
 
@@ -88,7 +97,7 @@ export default function IsFotograflari({ isId, fotograflar, hizmetTuru, mahalle,
       if (error) throw error;
       setYayinlanan((prev) => new Set(prev).add(url));
     } catch (err) {
-      alert("Siteye eklenemedi. " + dbHataMesaji(err));
+      setHata({ mesaj: "Siteye eklenemedi. " + dbHataMesaji(err) });
     }
   }
 
@@ -148,6 +157,26 @@ export default function IsFotograflari({ isId, fotograflar, hizmetTuru, mahalle,
       >
         {yukleniyor ? ilerleme || "Yükleniyor..." : "📷 Fotoğraf Ekle"}
       </button>
+
+      {hata && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-red-800 font-medium">{hata.mesaj}</p>
+            <button
+              onClick={() => setHata(null)}
+              className="text-red-400 shrink-0 leading-none text-lg"
+              aria-label="Kapat"
+            >
+              ×
+            </button>
+          </div>
+          {hata.ham && (
+            <p className="mt-2 text-[11px] font-mono text-red-500 break-all select-all">
+              {hata.ham}
+            </p>
+          )}
+        </div>
+      )}
 
       <p className="text-xs text-gray-400">
         Öncesi/sonrası fotoğrafı hem anlaşmazlıkta kanıt olur hem de siteye ekleyebilirsin.

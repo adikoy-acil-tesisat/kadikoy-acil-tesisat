@@ -46,7 +46,16 @@ export function fotografiKucult(dosya: File): Promise<Blob> {
 
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Dosya bir görsel değil."));
+      // iPhone'un HEIC formatını bazı tarayıcılar açamıyor; kullanıcıya ne
+      // yapacağını söyle, "bir görsel değil" tek başına yanıltıcı.
+      const heic = /.(heic|heif)$/i.test(dosya.name);
+      reject(
+        new Error(
+          heic
+            ? "iPhone HEIC formatındaki fotoğraflar burada açılamıyor. Ayarlar > Kamera > Formatlar > “En Uyumlu” seçip yeniden çekin, ya da fotoğrafı WhatsApp'tan kendinize gönderip oradan yükleyin."
+            : "Bu dosya açılamadı. JPG veya PNG bir fotoğraf seçin."
+        )
+      );
     };
 
     img.src = url;
@@ -81,19 +90,40 @@ function yuklemeHatasi(mesaj: string): string {
 }
 
 /**
+ * Rastgele dosya adı. crypto.randomUUID yalnızca güvenli bağlamda ve
+ * iOS 15.4+ tarayıcılarda var; eski telefonlarda çökmesin diye yedeği var.
+ */
+function yeniDosyaAdi(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `${crypto.randomUUID()}.jpg`;
+  }
+  const rastgele = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  return `${Date.now().toString(36)}-${rastgele}.jpg`;
+}
+
+/** Yükleme hatasına ham Supabase metnini de iliştirir (ekranda gösterilebilsin). */
+export interface YuklemeHatasi extends Error {
+  ham?: string;
+}
+
+/**
  * Fotoğrafı yükler ve herkese açık URL'ini döndürür.
  * Dosya adı rastgeledir; tahmin edilemesin diye.
  */
 export async function fotografYukle(dosya: File): Promise<string> {
   const kucuk = await fotografiKucult(dosya);
-  const ad = `${crypto.randomUUID()}.jpg`;
+  const ad = yeniDosyaAdi();
 
   const supabase = createClient();
   const { error } = await supabase.storage.from(KOVA).upload(ad, kucuk, {
     contentType: "image/jpeg",
     cacheControl: "31536000", // fotoğraf değişmez, uzun süre önbelleklensin
   });
-  if (error) throw new Error(yuklemeHatasi(error.message));
+  if (error) {
+    const hata: YuklemeHatasi = new Error(yuklemeHatasi(error.message));
+    hata.ham = error.message;
+    throw hata;
+  }
 
   const { data } = supabase.storage.from(KOVA).getPublicUrl(ad);
   return data.publicUrl;
