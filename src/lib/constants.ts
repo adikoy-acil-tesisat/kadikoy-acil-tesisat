@@ -18,7 +18,18 @@ export const SITE_CONFIG = {
     instagram: "#",
     facebook: "#",
   },
+  /**
+   * Google Business Profile yorum bağlantısı.
+   *
+   * Profil doğrulandıktan sonra Google'ın verdiği kısa bağlantı buraya
+   * yazılır: Business Profile > Yorum iste > bağlantıyı kopyala.
+   * Boş bırakılırsa paneldeki "Yorum İste" düğmesi görünmez.
+   */
+  googleYorumLinki: "",
 };
+
+/** Google Search Console doğrulama etiketi (Settings > Ownership verification). */
+export const GOOGLE_DOGRULAMA = "";
 
 export const SERVICES = [
   {

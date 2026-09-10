@@ -9,7 +9,7 @@ import MobileBottomBar from "@/components/MobileBottomBar";
 import ScrollToTop from "@/components/ScrollToTop";
 import CookieBanner from "@/components/CookieBanner";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
-import { SITE_CONFIG, SITE_URL, SERVICES } from "@/lib/constants";
+import { SITE_CONFIG, SITE_URL, SERVICES, GOOGLE_DOGRULAMA } from "@/lib/constants";
 import { KADIKOY_MAHALLELERI } from "@/lib/mahalleler";
 
 const geistSans = Geist({
@@ -60,6 +60,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: GOOGLE_DOGRULAMA ? { google: GOOGLE_DOGRULAMA } : undefined,
   alternates: {
     canonical: "/",
   },

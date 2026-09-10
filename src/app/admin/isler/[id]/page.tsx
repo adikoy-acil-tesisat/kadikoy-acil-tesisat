@@ -8,6 +8,7 @@ import { dbHataMesaji } from "@/lib/db-error";
 import { toIntlPhone, todayISO } from "@/lib/date";
 import { para, tarihUzun, tarihKisa, saatKisa } from "@/lib/format";
 import { yolTarifiLinki } from "@/lib/harita";
+import { SITE_CONFIG } from "@/lib/constants";
 import IsFotograflari from "@/components/IsFotograflari";
 import {
   HIZMET_TURLERI,
@@ -486,6 +487,25 @@ export default function IsDetayPage() {
         >
           ✓ İşi Tamamla
         </button>
+      )}
+
+      {/*
+        Yorum isteme. Yerel aramada sıralamayı en çok belirleyen şey yorum
+        sayısı ve puanı; işi biter bitmez istemek en yüksek dönüş aldığı an.
+      */}
+      {job.durum === "tamamlandi" && musteri?.telefon && SITE_CONFIG.googleYorumLinki && (
+        <a
+          href={`https://wa.me/${toIntlPhone(musteri.telefon)}?text=${encodeURIComponent(
+            `Merhaba ${musteri.ad}, bugünkü tesisat işiniz için teşekkür ederim. ` +
+              `Memnun kaldıysanız Google'da kısa bir yorum bırakmanız benim için çok değerli olur:\n` +
+              SITE_CONFIG.googleYorumLinki
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl transition-colors"
+        >
+          ⭐ WhatsApp&apos;tan Yorum İste
+        </a>
       )}
     </div>
   );
