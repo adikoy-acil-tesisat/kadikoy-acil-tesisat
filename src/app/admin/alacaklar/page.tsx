@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { toIntlPhone } from "@/lib/date";
 import { para, tarihKisa } from "@/lib/format";
+import { odemeToplamlari, kalanBakiye } from "@/lib/tahsilat";
 import { HIZMET_TURLERI, type Is, type Musteri, type Odeme } from "@/lib/types";
 
 type Satir = {
@@ -68,10 +69,7 @@ export default function AlacaklarPage() {
           .select("is_id, tutar")
           .in("is_id", liste.map((i) => i.id));
 
-        const odenenMap = new Map<string, number>();
-        for (const o of (odemeler as Pick<Odeme, "is_id" | "tutar">[]) || []) {
-          odenenMap.set(o.is_id, (odenenMap.get(o.is_id) ?? 0) + Number(o.tutar));
-        }
+        const odenenMap = odemeToplamlari((odemeler as Pick<Odeme, "is_id" | "tutar">[]) || []);
 
         const hesaplanan: Satir[] = liste
           .map((is) => {
@@ -82,7 +80,7 @@ export default function AlacaklarPage() {
               musteri: (is.musteri as Musteri) ?? null,
               tutar,
               odenen,
-              kalan: tutar - odenen,
+              kalan: kalanBakiye(tutar, odenen),
               gun: gunFarki(is.tarih),
             };
           })

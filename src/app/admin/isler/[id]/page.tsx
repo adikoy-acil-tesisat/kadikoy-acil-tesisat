@@ -10,6 +10,7 @@ import { para, tarihUzun, tarihKisa, saatKisa } from "@/lib/format";
 import { yolTarifiLinki } from "@/lib/harita";
 import { SITE_CONFIG } from "@/lib/constants";
 import IsFotograflari from "@/components/IsFotograflari";
+import { kalanBakiye, odemeDurumu } from "@/lib/tahsilat";
 import {
   HIZMET_TURLERI,
   DURUM_MAP,
@@ -22,11 +23,8 @@ import {
 } from "@/lib/types";
 
 /** Tahsil edilen tutara göre ödeme durumunu belirler. */
-function odemeDurumuHesapla(tutar: number | null, odenen: number): string {
-  if (odenen <= 0) return "odenmedi";
-  if (tutar != null && odenen >= tutar) return "odendi";
-  return "kismi";
-}
+/** Ödeme durumu artık tahsilat satırlarından türetiliyor. */
+const odemeDurumuHesapla = (tutar: number | null, odenen: number) => odemeDurumu(tutar, odenen);
 
 export default function IsDetayPage() {
   const params = useParams();
@@ -168,6 +166,51 @@ export default function IsDetayPage() {
       .eq("id", isId);
     setJob((prev) => (prev ? { ...prev, odeme_durumu: yeniDurum, odeme_yontemi: odemeYontem } : prev));
     setSaving(false);
+  }
+
+  /**
+   * Ödeme durumu düğmeleri.
+   *
+   * Eskiden yalnızca isler.odeme_durumu alanını değiştiriyordu; ortada bir
+   * tahsilat satırı olmadığı için o para finans ekranında hiç görünmüyordu.
+   * Artık "Ödendi" kalan tutar kadar tahsilat yazar, "Ödenmedi" ise tahsilat
+   * varken karşılıksız kalmasın diye engellenir.
+   */
+  async function odemeDurumuDegistir(key: string) {
+    if (key === job?.odeme_durumu) return;
+
+    if (key === "odendi") {
+      const kalan = kalanBakiye(job?.tutar, toplamOdenen);
+      if (kalan <= 0) {
+        await updateJob({ odeme_durumu: "odendi" });
+        return;
+      }
+      if (!confirm(`Kalan ${para(kalan)} tahsil edildi olarak kaydedilsin mi?`)) return;
+
+      setSaving(true);
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("odemeler")
+        .insert({ is_id: isId, tutar: kalan, yontem: odemeYontem, tarih: todayISO() })
+        .select()
+        .single();
+      setSaving(false);
+      if (error || !data) {
+        alert("Tahsilat kaydedilemedi. " + dbHataMesaji(error));
+        return;
+      }
+      setOdemeler((prev) => [data as Odeme, ...prev]);
+      await updateJob({ odeme_durumu: "odendi", odeme_yontemi: odemeYontem });
+      return;
+    }
+
+    if (odemeler.length > 0) {
+      alert(
+        "Bu işte tahsilat kaydı var. Durumu geri almak için önce aşağıdaki tahsilat kayıtlarını silin."
+      );
+      return;
+    }
+    await updateJob({ odeme_durumu: key });
   }
 
   async function odemeSil(odeme: Odeme) {
@@ -464,7 +507,7 @@ export default function IsDetayPage() {
           {Object.entries(ODEME_DURUM_MAP).map(([key, val]) => (
             <button
               key={key}
-              onClick={() => updateJob({ odeme_durumu: key })}
+              onClick={() => odemeDurumuDegistir(key)}
               disabled={saving}
               className={`py-3 rounded-xl text-sm font-medium transition-colors ${
                 job.odeme_durumu === key ? `${val.bg} ${val.color} ring-2 ring-offset-1 ring-current` : "bg-gray-50 text-gray-600"
@@ -474,9 +517,11 @@ export default function IsDetayPage() {
             </button>
           ))}
         </div>
-        {odemeler.length > 0 && (
-          <p className="text-xs text-gray-400">Tahsilat ekledikçe bu durum otomatik güncellenir.</p>
-        )}
+        <p className="text-xs text-gray-400">
+          {odemeler.length > 0
+            ? "Tahsilat ekledikçe bu durum otomatik güncellenir."
+            : "“Ödendi” dediğinizde kalan tutar tahsilat olarak kaydedilir."}
+        </p>
       </div>
 
       {job.durum !== "tamamlandi" && (

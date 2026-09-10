@@ -108,3 +108,19 @@ export const KAYNAKLAR: Record<string, string> = {
   website: "Web Sitesi",
   diger: "Diğer",
 };
+
+/**
+ * Tahsilat satırı + bağlı işin özeti.
+ * Finans ekranı gelirleri işlerden değil tahsilatlardan listeler; müşteri adı
+ * ve hizmet türü için işin birkaç alanı da birlikte çekilir.
+ */
+export interface Tahsilat extends Odeme {
+  is?: {
+    hizmet_turu: string;
+    ilce?: string | null;
+    musteri?: { ad: string } | null;
+  } | null;
+}
+
+/** Trend/dağılım hesapları için tahsilatın yalnızca gereken alanları. */
+export type TahsilatOzet = Pick<Odeme, "tarih" | "tutar"> & Pick<Tahsilat, "is">;

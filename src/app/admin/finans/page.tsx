@@ -7,7 +7,17 @@ import { dbHataMesaji } from "@/lib/db-error";
 import { fotografYukle } from "@/lib/foto";
 import { todayISO, toIntlPhone } from "@/lib/date";
 import { para, ayAdi, tarihKisa } from "@/lib/format";
-import { HIZMET_TURLERI, GIDER_KATEGORILERI, type Is, type Gider } from "@/lib/types";
+import {
+  HIZMET_TURLERI,
+  GIDER_KATEGORILERI,
+  ODEME_YONTEMLERI,
+  type Is,
+  type Gider,
+  type Odeme,
+  type Tahsilat,
+  type TahsilatOzet,
+} from "@/lib/types";
+import { odemeToplamlari, kalanBakiye } from "@/lib/tahsilat";
 
 type Tab = "ozet" | "gelirler" | "giderler" | "odenmemis" | "istatistik";
 
@@ -36,11 +46,13 @@ export default function FinansPage() {
   const buAy = useMemo(() => ayAnahtari(new Date()), []);
   const [ay, setAy] = useState(buAy);
 
-  const [paidJobs, setPaidJobs] = useState<Is[]>([]);
+  const [tahsilatlar, setTahsilatlar] = useState<Tahsilat[]>([]);
   const [unpaidJobs, setUnpaidJobs] = useState<Is[]>([]);
+  /** Ödenmemiş işlerde o ana kadar tahsil edilen tutarlar (is_id -> toplam). */
+  const [kismiOdenen, setKismiOdenen] = useState<Map<string, number>>(new Map());
   const [expenses, setExpenses] = useState<Gider[]>([]);
-  /** İstatistik için son 6 ayın tüm ödenmiş işleri */
-  const [trendJobs, setTrendJobs] = useState<Is[]>([]);
+  /** İstatistik için son 6 ayın tüm tahsilatları */
+  const [trendTahsilat, setTrendTahsilat] = useState<TahsilatOzet[]>([]);
 
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [giderKat, setGiderKat] = useState("malzeme");
@@ -54,17 +66,25 @@ export default function FinansPage() {
     const { bas, son } = ayAraligi(ay);
     const trendBas = `${ayKaydir(buAy, -5)}-01`;
 
-    const [paidRes, unpaidRes, expRes, trendRes] = await Promise.all([
-      supabase.from("isler").select("*, musteri:musteriler(ad)").eq("odeme_durumu", "odendi").gte("tarih", bas).lte("tarih", son).order("tarih", { ascending: false }),
+    // Gelir, paranın eline geçtiği tarihe göre sayılır — işin tarihine göre
+    // değil. Bu yüzden hesaplar isler değil odemeler tablosundan çıkar.
+    const [tahsilatRes, unpaidRes, expRes, trendRes] = await Promise.all([
+      supabase.from("odemeler").select("*, is:isler(hizmet_turu, ilce, musteri:musteriler(ad))").gte("tarih", bas).lte("tarih", son).order("tarih", { ascending: false }),
       supabase.from("isler").select("*, musteri:musteriler(ad, telefon)").in("odeme_durumu", ["odenmedi", "kismi"]).eq("durum", "tamamlandi").order("tarih", { ascending: false }),
       supabase.from("giderler").select("*").gte("tarih", bas).lte("tarih", son).order("tarih", { ascending: false }),
-      supabase.from("isler").select("tarih, tutar, hizmet_turu, ilce").eq("odeme_durumu", "odendi").gte("tarih", trendBas),
+      supabase.from("odemeler").select("tarih, tutar, is:isler(hizmet_turu, ilce, musteri:musteriler(ad))").gte("tarih", trendBas),
     ]);
 
-    setPaidJobs((paidRes.data as Is[]) || []);
-    setUnpaidJobs((unpaidRes.data as Is[]) || []);
+    const acik = (unpaidRes.data as Is[]) || [];
+    const kismiRes = acik.length
+      ? await supabase.from("odemeler").select("is_id, tutar").in("is_id", acik.map((i) => i.id))
+      : { data: [] };
+
+    setTahsilatlar((tahsilatRes.data as Tahsilat[]) || []);
+    setUnpaidJobs(acik);
+    setKismiOdenen(odemeToplamlari((kismiRes.data as Odeme[]) || []));
     setExpenses((expRes.data as Gider[]) || []);
-    setTrendJobs((trendRes.data as Is[]) || []);
+    setTrendTahsilat((trendRes.data as unknown as TahsilatOzet[]) || []);
   }, [ay, buAy]);
 
   useEffect(() => {
@@ -140,33 +160,37 @@ export default function FinansPage() {
     setExpenses((prev) => prev.filter((x) => x.id !== g.id));
   }
 
-  const totalIncome = paidJobs.reduce((s, j) => s + (Number(j.tutar) || 0), 0);
+  const totalIncome = tahsilatlar.reduce((s, o) => s + (Number(o.tutar) || 0), 0);
   const totalExpense = expenses.reduce((s, e) => s + (Number(e.tutar) || 0), 0);
   const profit = totalIncome - totalExpense;
-  const totalUnpaid = unpaidJobs.reduce((s, j) => s + (Number(j.tutar) || 0), 0);
+  // Kısmi ödenen işlerde tamamı değil, kalan bakiye borçtur.
+  const totalUnpaid = unpaidJobs.reduce(
+    (s, j) => s + kalanBakiye(j.tutar, kismiOdenen.get(j.id) ?? 0),
+    0
+  );
 
   // Son 6 ayın gelir trendi
   const trend = useMemo(() => {
     const aylar = Array.from({ length: 6 }, (_, i) => ayKaydir(buAy, i - 5));
     return aylar.map((a) => ({
       ay: a,
-      tutar: trendJobs
-        .filter((j) => j.tarih?.startsWith(a))
-        .reduce((s, j) => s + (Number(j.tutar) || 0), 0),
+      tutar: trendTahsilat
+        .filter((o) => o.tarih?.startsWith(a))
+        .reduce((s, o) => s + (Number(o.tutar) || 0), 0),
     }));
-  }, [trendJobs, buAy]);
+  }, [trendTahsilat, buAy]);
   const trendMax = Math.max(...trend.map((t) => t.tutar), 1);
 
   // Mahalle dağılımı (son 6 ay)
   const mahalleDagilim = useMemo(() => {
     const m = new Map<string, { adet: number; tutar: number }>();
-    for (const j of trendJobs) {
-      const k = j.ilce || "Belirtilmemiş";
+    for (const o of trendTahsilat) {
+      const k = o.is?.ilce || "Belirtilmemiş";
       const v = m.get(k) ?? { adet: 0, tutar: 0 };
-      m.set(k, { adet: v.adet + 1, tutar: v.tutar + (Number(j.tutar) || 0) });
+      m.set(k, { adet: v.adet + 1, tutar: v.tutar + (Number(o.tutar) || 0) });
     }
     return [...m.entries()].sort((a, b) => b[1].tutar - a[1].tutar).slice(0, 6);
-  }, [trendJobs]);
+  }, [trendTahsilat]);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "ozet", label: "Özet" },
@@ -227,7 +251,7 @@ export default function FinansPage() {
                 <div className="bg-green-50 rounded-xl p-4 border border-green-100">
                   <p className="text-sm text-green-600 font-medium">Gelir</p>
                   <p className="text-2xl font-bold text-green-700">{para(totalIncome)}</p>
-                  <p className="text-xs text-green-500">{paidJobs.length} iş</p>
+                  <p className="text-xs text-green-500">{tahsilatlar.length} tahsilat</p>
                 </div>
                 <div className="bg-red-50 rounded-xl p-4 border border-red-100">
                   <p className="text-sm text-red-600 font-medium">Gider</p>
@@ -263,7 +287,7 @@ export default function FinansPage() {
                 ) : (
                   <div className="space-y-2.5">
                     {Object.entries(HIZMET_TURLERI).map(([key, label]) => {
-                      const amount = paidJobs.filter((j) => j.hizmet_turu === key).reduce((s, j) => s + (Number(j.tutar) || 0), 0);
+                      const amount = tahsilatlar.filter((o) => o.is?.hizmet_turu === key).reduce((s, o) => s + (Number(o.tutar) || 0), 0);
                       if (amount === 0) return null;
                       const oran = Math.round((amount / totalIncome) * 100);
                       return (
@@ -286,15 +310,19 @@ export default function FinansPage() {
 
           {tab === "gelirler" && (
             <div className="space-y-2">
-              {paidJobs.length === 0 ? (
-                <p className="text-center text-gray-400 py-8">Bu ay ödenen iş yok</p>
-              ) : paidJobs.map((j) => (
-                <Link key={j.id} href={`/admin/isler/${j.id}`} className="flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100">
-                  <div>
-                    <p className="font-medium text-sm text-gray-900">{(j.musteri as { ad: string } | null)?.ad || "—"}</p>
-                    <p className="text-xs text-gray-500">{tarihKisa(j.tarih)} • {HIZMET_TURLERI[j.hizmet_turu] || j.hizmet_turu}</p>
+              {tahsilatlar.length === 0 ? (
+                <p className="text-center text-gray-400 py-8">Bu ay tahsilat yok</p>
+              ) : tahsilatlar.map((o) => (
+                <Link key={o.id} href={`/admin/isler/${o.is_id}`} className="flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm text-gray-900 truncate">{o.is?.musteri?.ad || "—"}</p>
+                    <p className="text-xs text-gray-500">
+                      {tarihKisa(o.tarih)}
+                      {o.is?.hizmet_turu ? ` • ${HIZMET_TURLERI[o.is.hizmet_turu] || o.is.hizmet_turu}` : ""}
+                      {o.yontem ? ` • ${ODEME_YONTEMLERI[o.yontem] || o.yontem}` : ""}
+                    </p>
                   </div>
-                  <span className="font-bold text-green-600">+{para(j.tutar)}</span>
+                  <span className="font-bold text-green-600 shrink-0 ml-2">+{para(o.tutar)}</span>
                 </Link>
               ))}
             </div>
@@ -391,7 +419,7 @@ export default function FinansPage() {
                           {j.odeme_durumu === "kismi" && <span className="ml-1 text-orange-600 font-medium">• Kısmi</span>}
                         </p>
                       </div>
-                      <span className="font-bold text-red-600">{para(j.tutar)}</span>
+                      <span className="font-bold text-red-600">{para(kalanBakiye(j.tutar, kismiOdenen.get(j.id) ?? 0))}</span>
                     </div>
                     <div className="flex gap-2">
                       <Link href={`/admin/isler/${j.id}`} className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-center text-sm font-medium">Detay</Link>

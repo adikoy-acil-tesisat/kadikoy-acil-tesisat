@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { todayISO, monthStartISO } from "@/lib/date";
 import { para, saatKisa, tarihKisa } from "@/lib/format";
-import { HIZMET_TURLERI, DURUM_MAP, ODEME_DURUM_MAP, type Is } from "@/lib/types";
+import { HIZMET_TURLERI, DURUM_MAP, ODEME_DURUM_MAP, type Is, type Odeme } from "@/lib/types";
+import { odemeToplamlari, kalanBakiye } from "@/lib/tahsilat";
 
 /** n gün sonrasının yerel tarihi. */
 function gunEkle(gun: number): string {
@@ -61,16 +62,33 @@ export default function AdminDashboard() {
         const haftaSonu = gunEkle(7);
         const monthStart = monthStartISO();
 
-        const [jobsRes, yarinRes, haftaRes, monthJobsRes, alacakRes, customerRes, monthCountRes] =
+        const [jobsRes, yarinRes, haftaRes, ayTahsilatRes, alacakRes, customerRes, monthCountRes] =
           await Promise.all([
             supabase.from("isler").select("*, musteri:musteriler(ad, telefon, ilce)").eq("tarih", today).order("saat", { ascending: true }),
             supabase.from("isler").select("*, musteri:musteriler(ad, telefon, ilce)").eq("tarih", yarin).order("saat", { ascending: true }),
             supabase.from("isler").select("id", { count: "exact", head: true }).gte("tarih", today).lte("tarih", haftaSonu).neq("durum", "iptal"),
-            supabase.from("isler").select("tutar").gte("tarih", monthStart).eq("odeme_durumu", "odendi"),
-            supabase.from("isler").select("tutar").in("odeme_durumu", ["odenmedi", "kismi"]).eq("durum", "tamamlandi"),
+            // Gelir = bu ay fiilen tahsil edilen para (işin tarihi değil, paranın
+            // eline geçtiği tarih esas alınır).
+            supabase.from("odemeler").select("tutar").gte("tarih", monthStart),
+            supabase.from("isler").select("id, tutar").in("odeme_durumu", ["odenmedi", "kismi"]).eq("durum", "tamamlandi"),
             supabase.from("musteriler").select("id", { count: "exact", head: true }),
             supabase.from("isler").select("id", { count: "exact", head: true }).gte("tarih", monthStart),
           ]);
+
+        if (cancelled) return;
+
+        // Kısmi ödenen işlerde tamamı değil, yalnızca kalan bakiye alacaktır.
+        const acikIsler = (alacakRes.data as Pick<Is, "id" | "tutar">[]) || [];
+        const odenenler = acikIsler.length
+          ? odemeToplamlari(
+              ((
+                await supabase
+                  .from("odemeler")
+                  .select("is_id, tutar")
+                  .in("is_id", acikIsler.map((i) => i.id))
+              ).data as Pick<Odeme, "is_id" | "tutar">[]) || []
+            )
+          : new Map<string, number>();
 
         if (cancelled) return;
 
@@ -78,8 +96,8 @@ export default function AdminDashboard() {
         setYarinJobs((yarinRes.data as Is[]) || []);
         setHaftaSayisi(haftaRes.count || 0);
         setStats({
-          aylikGelir: (monthJobsRes.data || []).reduce((s, j) => s + (Number(j.tutar) || 0), 0),
-          alacak: (alacakRes.data || []).reduce((s, j) => s + (Number(j.tutar) || 0), 0),
+          aylikGelir: (ayTahsilatRes.data || []).reduce((s, o) => s + (Number(o.tutar) || 0), 0),
+          alacak: acikIsler.reduce((s, i) => s + kalanBakiye(i.tutar, odenenler.get(i.id) ?? 0), 0),
           toplamMusteri: customerRes.count || 0,
           aylikIs: monthCountRes.count || 0,
         });
