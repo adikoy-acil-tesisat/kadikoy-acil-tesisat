@@ -33,7 +33,27 @@ export default function YeniIsPage() {
     async function loadCustomers() {
       const supabase = createClient();
       const { data } = await supabase.from("musteriler").select("*").order("olusturma_tarihi", { ascending: false }).limit(200);
-      setCustomers((data as Musteri[]) || []);
+      const liste = (data as Musteri[]) || [];
+      setCustomers(liste);
+
+      // Müşteri kartındaki "+ Yeni İş" bağlantısı o müşteriyi seçili getirir.
+      // useSearchParams yerine adres çubuğu okunuyor; sayfa zaten istemci
+      // tarafında ve böylece Suspense sarmalayıcısına gerek kalmıyor.
+      const sorgu = new URLSearchParams(window.location.search);
+
+      // Takvimdeki "bu güne iş ekle" bağlantısı tarihi hazır getirir.
+      const istenenTarih = sorgu.get("tarih");
+      if (istenenTarih && /^d{4}-d{2}-d{2}$/.test(istenenTarih)) setTarih(istenenTarih);
+
+      const istenen = sorgu.get("musteri");
+      if (istenen) {
+        const bulunan = liste.find((m) => m.id === istenen);
+        if (bulunan) {
+          setSelectedCustomer(bulunan);
+          if (bulunan.ilce) setIlce(bulunan.ilce);
+          if (bulunan.adres) setAdres(bulunan.adres);
+        }
+      }
     }
     loadCustomers();
   }, []);

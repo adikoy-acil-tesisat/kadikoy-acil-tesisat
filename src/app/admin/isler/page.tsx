@@ -5,17 +5,28 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { yolTarifiLinki } from "@/lib/harita";
-import { todayISO } from "@/lib/date";
+import { todayISO, toIntlPhone } from "@/lib/date";
+import AyTakvimi from "@/components/AyTakvimi";
 import { para, tarihKisa, gunAdi, saatKisa } from "@/lib/format";
 import { HIZMET_TURLERI, DURUM_MAP, ODEME_DURUM_MAP, type Is } from "@/lib/types";
 
+/**
+ * Filtreler. "odenmedi" bir durum değil, ödeme filtresi: tamamlanmış ama
+ * parası alınmamış işleri getirir — listeye en çok bunun için bakılıyor.
+ */
 const FILTERS = [
   { key: "tumu", label: "Tümü" },
   { key: "beklemede", label: "Beklemede" },
   { key: "devam_ediyor", label: "Devam" },
   { key: "tamamlandi", label: "Bitti" },
+  { key: "odenmedi", label: "Ödenmedi" },
   { key: "iptal", label: "İptal" },
 ];
+
+/** Telefon aramasında biçim farkı olmasın: "0532 111" -> "0532111" */
+function sadeceRakam(metin: string): string {
+  return metin.replace(/\D/g, "");
+}
 
 type Gorunum = "liste" | "takvim";
 
@@ -51,6 +62,14 @@ function JobCard({ job, onDurum }: { job: Is; onDurum: (id: string, durum: strin
 
       {/* Hızlı eylemler — işi açmadan */}
       <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+        {musteri?.telefon && (
+          <a
+            href={`tel:+${toIntlPhone(musteri.telefon)}`}
+            className="flex-1 bg-green-50 text-green-700 py-2 rounded-lg text-xs font-semibold text-center"
+          >
+            Ara
+          </a>
+        )}
         {job.durum === "beklemede" && (
           <button
             onClick={() => onDurum(job.id, "devam_ediyor")}
@@ -87,6 +106,8 @@ export default function IslerPage() {
   const [filter, setFilter] = useState("tumu");
   const [search, setSearch] = useState("");
   const [gorunum, setGorunum] = useState<Gorunum>("liste");
+  const [ay, setAy] = useState(() => todayISO().slice(0, 7));
+  const [seciliGun, setSeciliGun] = useState<string | null>(() => todayISO());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -102,7 +123,11 @@ export default function IslerPage() {
           .order("olusturma_tarihi", { ascending: false })
           .limit(200);
 
-        if (filter !== "tumu") query = query.eq("durum", filter);
+        if (filter === "odenmedi") {
+          query = query.eq("durum", "tamamlandi").in("odeme_durumu", ["odenmedi", "kismi"]);
+        } else if (filter !== "tumu") {
+          query = query.eq("durum", filter);
+        }
 
         const { data } = await query;
         if (!cancelled) setJobs((data as Is[]) || []);
@@ -135,29 +160,41 @@ export default function IslerPage() {
   }
 
   const filtered = useMemo(() => {
-    if (!search) return jobs;
-    const q = search.toLowerCase();
+    const q = search.trim().toLocaleLowerCase("tr-TR");
+    if (!q) return jobs;
+    // Rakam girildiyse telefon aranıyordur; boşluk ve parantez farkını yok say.
+    const rakam = sadeceRakam(q);
+
     return jobs.filter((j) => {
-      const m = j.musteri as { ad: string; telefon: string } | null;
-      return `${m?.ad || ""} ${m?.telefon || ""} ${j.aciklama || ""}`.toLowerCase().includes(q);
+      const m = j.musteri as { ad: string; telefon: string; ilce?: string } | null;
+      if (rakam.length >= 3 && sadeceRakam(m?.telefon || "").includes(rakam)) return true;
+      const metin = `${m?.ad || ""} ${m?.ilce || ""} ${j.ilce || ""} ${j.adres || ""} ${j.aciklama || ""}`;
+      return metin.toLocaleLowerCase("tr-TR").includes(q);
     });
   }, [jobs, search]);
 
-  /** Takvim: bugünden itibaren tarihe göre gruplu, yaklaşan işler */
-  const takvimGruplari = useMemo(() => {
-    const bugun = todayISO();
-    const yaklasan = filtered
-      .filter((j) => j.tarih >= bugun && j.durum !== "iptal")
-      .sort((a, b) => (a.tarih === b.tarih ? (a.saat || "").localeCompare(b.saat || "") : a.tarih.localeCompare(b.tarih)));
-
+  /** Liste görünümü: tarihe göre gruplu, yeniden eskiye. */
+  const listeGruplari = useMemo(() => {
     const gruplar = new Map<string, Is[]>();
-    for (const j of yaklasan) {
+    for (const j of filtered) {
       const liste = gruplar.get(j.tarih) ?? [];
       liste.push(j);
       gruplar.set(j.tarih, liste);
     }
-    return [...gruplar.entries()];
+    for (const liste of gruplar.values()) {
+      liste.sort((a, b) => (a.saat || "").localeCompare(b.saat || ""));
+    }
+    return [...gruplar.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   }, [filtered]);
+
+  /** Takvimde seçili günün işleri. */
+  const gununIsleri = useMemo(
+    () =>
+      filtered
+        .filter((j) => j.tarih === seciliGun)
+        .sort((a, b) => (a.saat || "").localeCompare(b.saat || "")),
+    [filtered, seciliGun]
+  );
 
   const bugun = todayISO();
 
@@ -175,7 +212,13 @@ export default function IslerPage() {
         {(["liste", "takvim"] as Gorunum[]).map((g) => (
           <button
             key={g}
-            onClick={() => setGorunum(g)}
+            onClick={() => {
+              setGorunum(g);
+              if (g === "takvim") {
+                setAy(todayISO().slice(0, 7));
+                setSeciliGun(todayISO());
+              }
+            }}
             className={`py-2 rounded-lg text-sm font-medium transition-colors ${
               gorunum === g ? "bg-white text-blue-600 shadow-sm" : "text-gray-500"
             }`}
@@ -189,7 +232,7 @@ export default function IslerPage() {
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Müşteri adı veya telefon ara..."
+        placeholder="Ad, telefon, mahalle veya açıklama ara..."
         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
       />
 
@@ -212,40 +255,78 @@ export default function IslerPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
       ) : gorunum === "takvim" ? (
-        takvimGruplari.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">Yaklaşan iş yok</div>
-        ) : (
-          <div className="space-y-5">
-            {takvimGruplari.map(([tarih, gunIsleri]) => {
-              const gunToplam = gunIsleri.reduce((s, j) => s + (Number(j.tutar) || 0), 0);
-              return (
-                <div key={tarih}>
-                  <div className="flex items-center justify-between mb-2 sticky top-14 bg-gray-50 py-1.5 z-10">
-                    <div className="flex items-baseline gap-2">
-                      <span className={`font-bold ${tarih === bugun ? "text-blue-600" : "text-gray-900"}`}>
-                        {tarih === bugun ? "Bugün" : tarihKisa(tarih)}
-                      </span>
-                      <span className="text-xs text-gray-400 capitalize">{gunAdi(tarih)}</span>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      {gunIsleri.length} iş{gunToplam > 0 && ` • ${para(gunToplam)}`}
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {gunIsleri.map((job) => <JobCard key={job.id} job={job} onDurum={durumDegistir} />)}
-                  </div>
+        <div className="space-y-4">
+          <AyTakvimi
+            ay={ay}
+            isler={filtered}
+            seciliGun={seciliGun}
+            onAyDegisti={setAy}
+            onGunSecildi={setSeciliGun}
+          />
+
+          {seciliGun && (
+            <div>
+              <div className="flex items-baseline justify-between mb-2.5">
+                <div className="flex items-baseline gap-2">
+                  <h2 className={`font-bold ${seciliGun === bugun ? "text-blue-600" : "text-gray-900"}`}>
+                    {seciliGun === bugun ? "Bugün" : tarihKisa(seciliGun)}
+                  </h2>
+                  <span className="text-xs text-gray-400 capitalize">{gunAdi(seciliGun)}</span>
                 </div>
-              );
-            })}
-          </div>
-        )
-      ) : filtered.length === 0 ? (
+                {gununIsleri.length > 0 && (
+                  <span className="text-xs text-gray-500 tabular-nums">
+                    {gununIsleri.length} iş • {para(gununIsleri.reduce((s, j) => s + (Number(j.tutar) || 0), 0))}
+                  </span>
+                )}
+              </div>
+
+              {gununIsleri.length === 0 ? (
+                <div className="bg-white rounded-xl p-6 text-center border border-gray-100">
+                  <p className="text-gray-400 text-sm mb-3">Bu güne kayıtlı iş yok</p>
+                  <Link
+                    href={`/admin/isler/yeni?tarih=${seciliGun}`}
+                    className="inline-block bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-xl"
+                  >
+                    + Bu güne iş ekle
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {gununIsleri.map((job) => <JobCard key={job.id} job={job} onDurum={durumDegistir} />)}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : listeGruplari.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           {search ? "Sonuç bulunamadı" : "Henüz iş kaydı yok"}
         </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map((job) => <JobCard key={job.id} job={job} onDurum={durumDegistir} />)}
+        <div className="space-y-5">
+          {listeGruplari.map(([tarih, gunIsleri]) => {
+            const gunToplam = gunIsleri.reduce((s, j) => s + (Number(j.tutar) || 0), 0);
+            return (
+              <div key={tarih}>
+                {/* Tarih başlığı kaydırırken üstte kalır; uzun listede hangi
+                    günde olduğunu kaybetmemek için */}
+                <div className="flex items-center justify-between mb-2 sticky top-14 bg-gray-50 py-1.5 z-10">
+                  <div className="flex items-baseline gap-2">
+                    <span className={`font-bold ${tarih === bugun ? "text-blue-600" : "text-gray-900"}`}>
+                      {tarih === bugun ? "Bugün" : tarihKisa(tarih)}
+                    </span>
+                    <span className="text-xs text-gray-400 capitalize">{gunAdi(tarih)}</span>
+                  </div>
+                  <span className="text-xs text-gray-500 tabular-nums">
+                    {gunIsleri.length} iş{gunToplam > 0 && ` • ${para(gunToplam)}`}
+                  </span>
+                </div>
+                <div className="space-y-2.5">
+                  {gunIsleri.map((job) => <JobCard key={job.id} job={job} onDurum={durumDegistir} />)}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

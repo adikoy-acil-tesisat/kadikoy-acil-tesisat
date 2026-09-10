@@ -7,13 +7,17 @@ import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { toIntlPhone } from "@/lib/date";
 import { vcardOlustur, vcardIndir } from "@/lib/vcard";
-import { HIZMET_TURLERI, DURUM_MAP, ODEME_DURUM_MAP, type Musteri, type Is } from "@/lib/types";
+import { para, tarihKisa } from "@/lib/format";
+import { odemeToplamlari, kalanBakiye } from "@/lib/tahsilat";
+import { HIZMET_TURLERI, DURUM_MAP, ODEME_DURUM_MAP, type Musteri, type Is, type Odeme } from "@/lib/types";
 
 export default function MusteriDetayPage() {
   const params = useParams();
   const router = useRouter();
   const [customer, setCustomer] = useState<Musteri | null>(null);
   const [jobs, setJobs] = useState<Is[]>([]);
+  /** İşe göre tahsil edilen toplam (is_id -> tutar). */
+  const [odenenler, setOdenenler] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({ ad: "", telefon: "", ilce: "", adres: "", notlar: "" });
@@ -32,7 +36,20 @@ export default function MusteriDetayPage() {
         const c = (custRes.data as Musteri) ?? null;
         setCustomer(c);
         if (c) setEditData({ ad: c.ad, telefon: c.telefon, ilce: c.ilce || "", adres: c.adres || "", notlar: c.notlar || "" });
-        setJobs((jobsRes.data as Is[]) || []);
+        const isler = (jobsRes.data as Is[]) || [];
+        setJobs(isler);
+
+        // Gelir ve bakiye, işin durum etiketinden değil tahsilat kayıtlarından
+        // hesaplanır; kısmi ödenen işler yoksa sayılmıyordu.
+        if (isler.length > 0) {
+          const { data: odemeler } = await supabase
+            .from("odemeler")
+            .select("is_id, tutar")
+            .in("is_id", isler.map((i) => i.id));
+          if (!cancelled) {
+            setOdenenler(odemeToplamlari((odemeler as Pick<Odeme, "is_id" | "tutar">[]) || []));
+          }
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -76,8 +93,18 @@ export default function MusteriDetayPage() {
   if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>;
   if (!customer) return <div className="p-4 text-center text-gray-500">Müşteri bulunamadı</div>;
 
-  const totalIncome = jobs.filter((j) => j.odeme_durumu === "odendi").reduce((sum, j) => sum + (Number(j.tutar) || 0), 0);
-  const unpaidCount = jobs.filter((j) => j.odeme_durumu === "odenmedi" && j.durum === "tamamlandi").length;
+  const totalIncome = [...odenenler.values()].reduce((s, t) => s + t, 0);
+
+  /** Tamamlanmış ama tahsil edilmemiş bakiyelerin toplamı. */
+  const acikBakiye = jobs
+    .filter((j) => j.durum === "tamamlandi")
+    .reduce((s, j) => s + kalanBakiye(j.tutar, odenenler.get(j.id) ?? 0), 0);
+
+  const tamamlanan = jobs.filter((j) => j.durum === "tamamlandi");
+  /** İşler tarihe göre azalan sırada geldiği için ilki en son iş. */
+  const sonZiyaret = tamamlanan[0]?.tarih ?? null;
+  const ilkIs = tamamlanan[tamamlanan.length - 1]?.tarih ?? null;
+  const ortalamaIs = tamamlanan.length > 0 ? Math.round(totalIncome / tamamlanan.length) : 0;
 
   return (
     <div className="p-4 space-y-4">
@@ -150,27 +177,46 @@ export default function MusteriDetayPage() {
         )}
       </div>
 
-      {/* Stats */}
+      {/* Özet */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
           <p className="text-xl font-bold text-gray-900">{jobs.length}</p>
           <p className="text-xs text-gray-500">Toplam İş</p>
         </div>
         <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
-          <p className="text-xl font-bold text-green-600">{totalIncome.toLocaleString("tr-TR")} ₺</p>
-          <p className="text-xs text-gray-500">Toplam Gelir</p>
+          <p className="text-xl font-bold text-green-600 tabular-nums">{para(totalIncome)}</p>
+          <p className="text-xs text-gray-500">Tahsil Edilen</p>
         </div>
         <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
-          <p className="text-xl font-bold text-red-600">{unpaidCount}</p>
-          <p className="text-xs text-gray-500">Ödenmemiş</p>
+          <p className={`text-xl font-bold tabular-nums ${acikBakiye > 0 ? "text-red-600" : "text-gray-300"}`}>
+            {para(acikBakiye)}
+          </p>
+          <p className="text-xs text-gray-500">Açık Bakiye</p>
         </div>
       </div>
+
+      {tamamlanan.length > 0 && (
+        <div className="bg-white rounded-xl p-4 border border-gray-100 space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-500">Son ziyaret</span>
+            <span className="font-medium text-gray-900">{sonZiyaret ? tarihKisa(sonZiyaret) : "—"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">İlk iş</span>
+            <span className="font-medium text-gray-900">{ilkIs ? tarihKisa(ilkIs) : "—"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">İş başına ortalama</span>
+            <span className="font-medium text-gray-900 tabular-nums">{para(ortalamaIs)}</span>
+          </div>
+        </div>
+      )}
 
       {/* Job history */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold text-gray-900">İş Geçmişi</h3>
-          <Link href={`/admin/isler/yeni`} className="text-blue-600 text-sm font-medium">+ Yeni İş</Link>
+          <Link href={`/admin/isler/yeni?musteri=${customer.id}`} className="text-blue-600 text-sm font-medium">+ Yeni İş</Link>
         </div>
         {jobs.length === 0 ? (
           <p className="text-gray-400 text-center py-6">Henüz iş kaydı yok</p>
@@ -182,8 +228,8 @@ export default function MusteriDetayPage() {
               return (
                 <Link key={j.id} href={`/admin/isler/${j.id}`} className="block bg-white rounded-xl p-3 border border-gray-100 active:bg-gray-50">
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-sm text-gray-500">{new Date(j.tarih).toLocaleDateString("tr-TR")}</span>
-                    {j.tutar && <span className="font-bold text-sm">{Number(j.tutar).toLocaleString("tr-TR")} ₺</span>}
+                    <span className="text-sm text-gray-500">{tarihKisa(j.tarih)}</span>
+                    {j.tutar != null && <span className="font-bold text-sm tabular-nums">{para(j.tutar)}</span>}
                   </div>
                   <div className="flex gap-2">
                     <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{HIZMET_TURLERI[j.hizmet_turu] || j.hizmet_turu}</span>
