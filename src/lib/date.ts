@@ -30,3 +30,16 @@ export function toIntlPhone(phone: string): string {
   if (digits.startsWith("90")) return digits;
   return "90" + digits.replace(/^0+/, "");
 }
+
+/** Yerel saate göre bir önceki ayın ilk günü: "YYYY-MM-01" */
+export function oncekiAyBasiISO(date: Date = new Date()): string {
+  const d = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+  return monthStartISO(d);
+}
+
+/** n gün önce/sonranın yerel tarihi. */
+export function gunEkleISO(gun: number, date: Date = new Date()): string {
+  const d = new Date(date);
+  d.setDate(d.getDate() + gun);
+  return todayISO(d);
+}
