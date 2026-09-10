@@ -178,7 +178,7 @@ export default function Logo({
               dark ? "text-gray-400" : "text-gray-500"
             }`}
           >
-            7/24 ANADOLU YAKASI
+            7/24 KADIKÖY
           </span>
         )}
       </span>

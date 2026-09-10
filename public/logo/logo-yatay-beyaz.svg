@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" width="1200" height="300">
+  <rect width="480" height="120" fill="#ffffff"/>
+  <g transform="translate(83 12) scale(1.5)">
+<defs>
+  <linearGradient id="ysteel" x1="0" y1="0" x2="1" y2="1" gradientTransform="rotate(12 .5 .5)">
+    <stop offset="0%" stop-color="#f1f5f9"/><stop offset="12%" stop-color="#64748b"/>
+    <stop offset="24%" stop-color="#e2e8f0"/><stop offset="38%" stop-color="#475569"/>
+    <stop offset="52%" stop-color="#f8fafc"/><stop offset="66%" stop-color="#334155"/>
+    <stop offset="80%" stop-color="#cbd5e1"/><stop offset="92%" stop-color="#475569"/>
+    <stop offset="100%" stop-color="#e2e8f0"/>
+  </linearGradient>
+  <radialGradient id="yenamel" cx="34%" cy="26%" r="82%">
+    <stop offset="0%" stop-color="#3c6fd8"/><stop offset="55%" stop-color="#1e40af"/><stop offset="100%" stop-color="#0d1c52"/>
+  </radialGradient>
+  <linearGradient id="ychrome" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#334155"/><stop offset="16%" stop-color="#94a3b8"/><stop offset="33%" stop-color="#f8fafc"/>
+    <stop offset="52%" stop-color="#cbd5e1"/><stop offset="76%" stop-color="#64748b"/><stop offset="100%" stop-color="#1e293b"/>
+  </linearGradient>
+  <linearGradient id="ytube" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#cbd5e1"/><stop offset="55%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#64748b"/>
+  </linearGradient>
+  <radialGradient id="ywater" cx="36%" cy="26%" r="78%">
+    <stop offset="0%" stop-color="#e0f7ff"/><stop offset="40%" stop-color="#5cc9f5"/>
+    <stop offset="78%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#0369a1"/>
+  </radialGradient>
+  <filter id="yshadow" x="-40%" y="-40%" width="180%" height="185%">
+    <feDropShadow dx="0" dy="1.4" stdDeviation="1.3" flood-color="#000" flood-opacity=".5"/>
+  </filter>
+  <mask id="ytmask">
+    <rect x="16" y="21" width="32" height="8" rx="4" fill="#fff"/>
+    <rect x="28" y="25" width="8" height="17" rx="4" fill="#fff"/>
+  </mask>
+</defs>
+<circle cx="32" cy="32" r="31" fill="url(#ysteel)"/>
+<circle cx="32" cy="32" r="31" fill="none" stroke="#0f172a" stroke-opacity=".45"/>
+<circle cx="32" cy="32" r="25.5" fill="none" stroke="#0f172a" stroke-opacity=".35" stroke-width="1.4"/>
+<circle cx="32" cy="32" r="24.5" fill="url(#yenamel)"/>
+<path d="M32 8.5A23.5 23.5 0 0 1 52 20" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="2.4" stroke-linecap="round"/>
+<g filter="url(#yshadow)">
+  <g mask="url(#ytmask)">
+    <rect width="64" height="64" fill="url(#ytube)"/>
+    <rect x="16" y="21" width="32" height="8" rx="4" fill="none" stroke="#f8fafc" stroke-width="2.2" transform="translate(-1.8 -1.8)"/>
+    <rect x="28" y="25" width="8" height="17" rx="4" fill="none" stroke="#f8fafc" stroke-width="2.2" transform="translate(-1.8 -1.8)"/>
+    <rect x="16" y="21" width="32" height="8" rx="4" fill="none" stroke="#0f172a" stroke-opacity=".7" stroke-width="2.4" transform="translate(2 2)"/>
+  </g>
+  <rect x="13.5" y="18" width="4.6" height="14" rx="1.6" fill="url(#ychrome)"/>
+  <rect x="45.9" y="18" width="4.6" height="14" rx="1.6" fill="url(#ychrome)"/>
+</g>
+<path d="M12 2C12 2 5 10.5 5 15a7 7 0 0 0 14 0c0-4.5-7-13-7-13z" fill="url(#ywater)" transform="translate(32 42.5) scale(.45) translate(-12 -2)"/></g>
+  <text x="201" y="56" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="38" font-weight="800" fill="#1e40af">Kadıköy</text>
+  <text x="202" y="90" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="2.6" fill="#f59e0b">ACİL TESİSAT</text>
+</svg>
