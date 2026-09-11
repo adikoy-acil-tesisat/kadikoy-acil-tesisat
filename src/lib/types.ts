@@ -1,3 +1,5 @@
+import { KADIKOY_MAHALLELERI } from "@/lib/mahalleler";
+
 export interface Musteri {
   id: string;
   ad: string;
@@ -9,6 +11,8 @@ export interface Musteri {
   adres_tarifi?: string | null;
   notlar?: string | null;
   kaynak?: string | null;
+  /** Geri kazanım için en son ne zaman ulaşıldığı. */
+  son_iletisim?: string | null;
   olusturma_tarihi: string;
   guncelleme_tarihi: string;
 }
@@ -93,12 +97,15 @@ export const GIDER_KATEGORILERI: Record<string, string> = {
 };
 
 // Admin panelindeki bölge seçimi — Kadıköy mahalleleri
-export const ILCELER = [
-  "Acıbadem", "Bostancı", "Caddebostan", "Caferağa", "Dumlupınar", "Eğitim",
-  "Erenköy", "Fenerbahçe", "Feneryolu", "Fikirtepe", "Göztepe", "Hasanpaşa",
-  "Koşuyolu", "Kozyatağı", "Merdivenköy", "Moda", "Ondokuzmayıs", "Osmanağa",
-  "Rasimpaşa", "Sahrayıcedit", "Suadiye", "Zühtüpaşa", "Diğer",
-];
+/**
+ * Panelde adres alanında seçilen mahalleler.
+ *
+ * Hizmet bölgesi yalnızca Kadıköy olduğu için burada ilçe değil mahalle
+ * seçiliyor. Liste sitedeki mahalle sayfalarıyla aynı kaynaktan gelir ki
+ * ikisi birbirinden ayrı düşmesin. Veritabanındaki sütun adı tarihsel
+ * sebeple "ilce" kaldı; taşıdığı değer mahalledir.
+ */
+export const MAHALLELER = [...KADIKOY_MAHALLELERI, "Diğer"];
 
 export const KAYNAKLAR: Record<string, string> = {
   telefon: "Telefon",

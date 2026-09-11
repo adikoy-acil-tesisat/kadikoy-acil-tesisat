@@ -262,6 +262,10 @@ export default function AdminDashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mx-auto mb-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
             Alacaklar
           </Link>
+          <Link href="/admin/geri-kazanim" className="bg-white border border-gray-200 text-gray-800 rounded-2xl p-4 text-center font-medium active:bg-gray-50 col-span-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mx-auto mb-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
+            Geri Kazanım
+          </Link>
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { toIntlPhone } from "@/lib/date";
-import { ILCELER, type Musteri } from "@/lib/types";
+import { MAHALLELER, type Musteri } from "@/lib/types";
 
 export default function MusterilerPage() {
   const [customers, setCustomers] = useState<Musteri[]>([]);
@@ -79,7 +79,7 @@ export default function MusterilerPage() {
         >
           Tümü
         </button>
-        {ILCELER.map((i) => (
+        {MAHALLELER.map((i) => (
           <button
             key={i}
             onClick={() => { setIlceFilter(i); setLoading(true); }}

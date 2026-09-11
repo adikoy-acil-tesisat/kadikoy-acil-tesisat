@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { todayISO } from "@/lib/date";
-import { HIZMET_TURLERI, ILCELER, type Musteri } from "@/lib/types";
+import { HIZMET_TURLERI, MAHALLELER, type Musteri } from "@/lib/types";
 
 /** Yarının tarihi, yerel saate göre. */
 function yarin(): string {
@@ -166,7 +166,7 @@ export default function HizliKayitPage() {
             className="w-full px-4 py-3.5 border border-gray-200 rounded-xl text-base bg-white outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Seçin</option>
-            {ILCELER.map((i) => (
+            {MAHALLELER.map((i) => (
               <option key={i} value={i}>{i}</option>
             ))}
           </select>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { todayISO } from "@/lib/date";
-import { HIZMET_TURLERI, ILCELER, type Musteri } from "@/lib/types";
+import { HIZMET_TURLERI, MAHALLELER, type Musteri } from "@/lib/types";
 
 export default function YeniIsPage() {
   const router = useRouter();
@@ -141,8 +141,8 @@ export default function YeniIsPage() {
               <input type="text" value={yeniAd} onChange={(e) => setYeniAd(e.target.value)} required placeholder="Ad Soyad *" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" />
               <input type="tel" value={yeniTelefon} onChange={(e) => setYeniTelefon(e.target.value)} required placeholder="Telefon * (05XX XXX XX XX)" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" />
               <select value={yeniIlce} onChange={(e) => { setYeniIlce(e.target.value); setIlce(e.target.value); }} className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                <option value="">İlçe Seçin</option>
-                {ILCELER.map((i) => <option key={i} value={i}>{i}</option>)}
+                <option value="">Mahalle Seçin</option>
+                {MAHALLELER.map((i) => <option key={i} value={i}>{i}</option>)}
               </select>
             </div>
           ) : (
@@ -213,10 +213,10 @@ export default function YeniIsPage() {
         {/* District & Address */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">İlçe</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Mahalle</label>
             <select value={ilce} onChange={(e) => setIlce(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
               <option value="">Seçin</option>
-              {ILCELER.map((i) => <option key={i} value={i}>{i}</option>)}
+              {MAHALLELER.map((i) => <option key={i} value={i}>{i}</option>)}
             </select>
           </div>
           <div>

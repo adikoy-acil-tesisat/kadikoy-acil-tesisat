@@ -16,7 +16,7 @@ import {
   DURUM_MAP,
   ODEME_DURUM_MAP,
   ODEME_YONTEMLERI,
-  ILCELER,
+  MAHALLELER,
   type Is,
   type Musteri,
   type Odeme,
@@ -342,7 +342,7 @@ export default function IsDetayPage() {
               <label className="block text-sm font-semibold text-gray-700 mb-1">Mahalle</label>
               <select value={form.ilce} onChange={(e) => setForm({ ...form, ilce: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white">
                 <option value="">Seçin</option>
-                {ILCELER.map((i) => <option key={i} value={i}>{i}</option>)}
+                {MAHALLELER.map((i) => <option key={i} value={i}>{i}</option>)}
               </select>
             </div>
             <div>
