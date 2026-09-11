@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import { CEREZ_ANAHTARI, analitikOnayiBildir } from "@/lib/cerez";
 
-const STORAGE_KEY = "cookie-consent";
+const STORAGE_KEY = CEREZ_ANAHTARI;
 
 const listeners = new Set<() => void>();
 
@@ -39,6 +40,8 @@ export default function CookieBanner() {
     } catch {
       // yazılamıyorsa da banner'ı kapat
     }
+    // Analytics izin bekliyordu; onayı buradan yükseltiyoruz.
+    analitikOnayiBildir();
     listeners.forEach((listener) => listener());
   }, []);
 
