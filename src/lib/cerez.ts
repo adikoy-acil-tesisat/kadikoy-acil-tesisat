@@ -1,15 +1,6 @@
 /** Çerez onayının tarayıcıda saklandığı anahtar. */
 export const CEREZ_ANAHTARI = "cookie-consent";
 
-/** Ziyaretçi çerezleri kabul etmiş mi? Okunamıyorsa kabul edilmemiş sayılır. */
-export function cerezOnayiVar(): boolean {
-  try {
-    return localStorage.getItem(CEREZ_ANAHTARI) === "accepted";
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Google'a ölçüm izninin verildiğini bildirir (Consent Mode v2).
  *
