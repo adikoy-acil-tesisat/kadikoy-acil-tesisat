@@ -6,11 +6,40 @@ import { useRouter } from "next/navigation";
 import { LogoMark } from "@/components/Logo";
 import { dbHataMesaji } from "@/lib/db-error";
 
+/**
+ * Giriş hatalarını ayırt eder.
+ *
+ * Önce hepsi "Email veya şifre hatalı" diye gösteriliyordu. Doğrulanmamış
+ * e-posta da bu mesajı alıyordu; o durumda şifre doğru olduğu hâlde insan
+ * şifresini yanlış sanıp boşuna deniyor.
+ */
+function girisHatasi(mesaj: string): string {
+  const m = mesaj.toLowerCase();
+  if (m.includes("email not confirmed") || m.includes("not_confirmed")) {
+    return (
+      "E-posta adresiniz doğrulanmamış. Supabase panelinde " +
+      "Authentication > Users bölümünden hesabı onaylayın."
+    );
+  }
+  if (m.includes("invalid login") || m.includes("invalid credentials")) {
+    return "Email veya şifre hatalı.";
+  }
+  if (m.includes("rate limit") || m.includes("too many")) {
+    return "Çok fazla deneme yapıldı. Birkaç dakika bekleyip tekrar deneyin.";
+  }
+  if (m.includes("user not found")) {
+    return "Bu e-posta ile kayıtlı kullanıcı yok.";
+  }
+  return dbHataMesaji(new Error(mesaj));
+}
+
 export default function GirisPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  /** Supabase'in ham mesajı — teşhis için küçük puntoyla gösterilir. */
+  const [hamHata, setHamHata] = useState("");
   const router = useRouter();
 
   async function handleSubmit(e: FormEvent) {
@@ -22,10 +51,8 @@ export default function GirisPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      // Bağlantı/yapılandırma sorunlarını "şifre hatalı" diye göstermeyelim;
-      // yalnızca sunucu gerçekten kimlik bilgilerini reddettiyse öyle diyoruz.
-      const kimlikHatasi = /invalid login|invalid credentials|email not confirmed/i.test(error.message);
-      setError(kimlikHatasi ? "Email veya şifre hatalı." : dbHataMesaji(error));
+      setError(girisHatasi(error.message));
+      setHamHata(error.message);
       setLoading(false);
       return;
     }
@@ -70,7 +97,14 @@ export default function GirisPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-700 text-sm p-3 rounded-xl">{error}</div>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+              <p className="text-red-700 text-sm font-medium">{error}</p>
+              {hamHata && (
+                <p className="mt-1.5 text-[11px] font-mono text-red-400 break-all select-all">
+                  {hamHata}
+                </p>
+              )}
+            </div>
           )}
 
           <button
