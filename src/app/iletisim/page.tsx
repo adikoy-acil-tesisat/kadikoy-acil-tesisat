@@ -1,18 +1,48 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { SITE_CONFIG} from "@/lib/constants";
 import { KADIKOY_MAHALLELERI } from "@/lib/mahalleler";
 
 export default function IletisimPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [gonderiliyor, setGonderiliyor] = useState(false);
 
-  function handleSubmit(e: FormEvent) {
+  /**
+   * Form önce talebi veritabanına yazar, sonra WhatsApp penceresini açar.
+   *
+   * Eskiden yalnızca WhatsApp açılıyordu. Pencere engellenirse, bilgisayarda
+   * WhatsApp kurulu değilse ya da müşteri göndermekten vazgeçerse talep
+   * hiçbir yere düşmüyor, tamamen kayboluyordu — üstelik ekranda "mesajınız
+   * iletildi" yazıyordu. Artık kayıt panele düşüyor.
+   */
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const name = (form.elements.namedItem("name") as HTMLInputElement).value;
     const phone = (form.elements.namedItem("phone") as HTMLInputElement).value;
     const message = (form.elements.namedItem("message") as HTMLTextAreaElement).value;
+    // Bal küpü: insan görmez, otomatik doldurma araçları doldurur.
+    const tuzak = (form.elements.namedItem("website") as HTMLInputElement)?.value;
+
+    if (tuzak) {
+      setSubmitted(true);
+      return;
+    }
+
+    setGonderiliyor(true);
+    try {
+      await createClient().from("talepler").insert({
+        ad: name,
+        telefon: phone,
+        mesaj: message,
+        sayfa: window.location.pathname,
+      });
+    } catch {
+      // Kayıt başarısız olsa bile müşteriyi engellemeyelim; WhatsApp açılsın.
+    }
+    setGonderiliyor(false);
 
     const whatsappText = `Merhaba, ben ${name}. Telefon: ${phone}. ${message}`;
     window.open(
@@ -94,8 +124,16 @@ export default function IletisimPage() {
               {submitted ? (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-8 text-center">
                   <span className="text-4xl mb-4 block">&#10003;</span>
-                  <h3 className="text-xl font-bold text-green-700 mb-2">Mesajınız WhatsApp&apos;a Yönlendirildi!</h3>
-                  <p className="text-gray-600">En kısa sürede size dönüş yapacağız.</p>
+                  <h3 className="text-xl font-bold text-green-700 mb-2">Talebiniz bize ulaştı</h3>
+                  <p className="text-gray-600 mb-4">
+                    En kısa sürede size dönüş yapacağız. Acilse doğrudan arayabilirsiniz.
+                  </p>
+                  <a
+                    href={`tel:${SITE_CONFIG.phoneIntl}`}
+                    className="inline-block bg-secondary hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-full transition-colors"
+                  >
+                    {SITE_CONFIG.phoneFormatted}
+                  </a>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -111,11 +149,24 @@ export default function IletisimPage() {
                     <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Mesajınız</label>
                     <textarea id="message" name="message" rows={4} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors resize-none" placeholder="Tesisat sorununuzu kısaca açıklayın..." />
                   </div>
-                  <button type="submit" className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-colors">
-                    WhatsApp ile Gönder
+                  {/* Bal küpü — ekranda görünmez, yalnızca botlar doldurur */}
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="absolute left-[-9999px] w-px h-px opacity-0"
+                  />
+                  <button
+                    type="submit"
+                    disabled={gonderiliyor}
+                    className="w-full bg-primary hover:bg-primary-dark disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                  >
+                    {gonderiliyor ? "Gönderiliyor..." : "Gönder"}
                   </button>
                   <p className="text-sm text-gray-500 text-center">
-                    Form, mesajınızı WhatsApp üzerinden bize iletir.
+                    Talebiniz bize iletilir, ardından WhatsApp penceresi açılır.
                   </p>
                 </form>
               )}

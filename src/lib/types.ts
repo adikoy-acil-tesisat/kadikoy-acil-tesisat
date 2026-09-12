@@ -105,7 +105,12 @@ export const GIDER_KATEGORILERI: Record<string, string> = {
  * ikisi birbirinden ayrı düşmesin. Veritabanındaki sütun adı tarihsel
  * sebeple "ilce" kaldı; taşıdığı değer mahalledir.
  */
-export const MAHALLELER = [...KADIKOY_MAHALLELERI, "Diğer"];
+export const MAHALLELER = [
+  // "Moda" resmî bir mahalle değil, Caferağa'nın içinde kalıyor; ama müşteri
+  // telefonda "Moda'dayım" diyor. Kayıt müşterinin kullandığı adla tutulmalı.
+  ...[...KADIKOY_MAHALLELERI, "Moda"].sort((a, b) => a.localeCompare(b, "tr")),
+  "Diğer",
+];
 
 export const KAYNAKLAR: Record<string, string> = {
   telefon: "Telefon",
@@ -131,3 +136,17 @@ export interface Tahsilat extends Odeme {
 
 /** Trend/dağılım hesapları için tahsilatın yalnızca gereken alanları. */
 export type TahsilatOzet = Pick<Odeme, "tarih" | "tutar"> & Pick<Tahsilat, "is">;
+
+/** Site iletişim formundan gelen talep. */
+export interface Talep {
+  id: string;
+  ad: string;
+  telefon: string;
+  mesaj?: string | null;
+  /** Talebin bırakıldığı sayfa yolu. */
+  sayfa?: string | null;
+  /** yeni | arandi | ise_donustu | kapandi */
+  durum: string;
+  notlar?: string | null;
+  olusturma_tarihi: string;
+}

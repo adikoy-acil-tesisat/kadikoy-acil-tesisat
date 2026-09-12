@@ -45,6 +45,18 @@ export default function YeniIsPage() {
       const istenenTarih = sorgu.get("tarih");
       if (istenenTarih && /^d{4}-d{2}-d{2}$/.test(istenenTarih)) setTarih(istenenTarih);
 
+      // Site talebinden geliniyorsa müşteri henüz kayıtlı değil; yeni müşteri
+      // formunu ad ve telefonla açıyoruz.
+      const talepAd = sorgu.get("ad");
+      const talepTel = sorgu.get("telefon");
+      if (talepAd && talepTel) {
+        setShowNewCustomer(true);
+        setYeniAd(talepAd);
+        setYeniTelefon(talepTel);
+        const talepAciklama = sorgu.get("aciklama");
+        if (talepAciklama) setAciklama(talepAciklama);
+      }
+
       const istenen = sorgu.get("musteri");
       if (istenen) {
         const bulunan = liste.find((m) => m.id === istenen);

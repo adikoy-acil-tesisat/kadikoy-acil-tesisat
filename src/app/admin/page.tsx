@@ -16,6 +16,8 @@ export default function AdminDashboard() {
   const [haftaSayisi, setHaftaSayisi] = useState(0);
   const [tahsilatlar, setTahsilatlar] = useState<Pick<Odeme, "tarih" | "tutar">[]>([]);
   const [stats, setStats] = useState({ alacak: 0, toplamMusteri: 0, aylikIs: 0 });
+  /** Henüz ilgilenilmemiş site talebi sayısı — rozette gösterilir. */
+  const [yeniTalep, setYeniTalep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -32,7 +34,7 @@ export default function AdminDashboard() {
         const oncekiAy = oncekiAyBasiISO();
         const isSecim = "*, musteri:musteriler(ad, telefon, ilce)";
 
-        const [jobsRes, yarinRes, haftaRes, tahsilatRes, alacakRes, customerRes, monthCountRes] =
+        const [jobsRes, yarinRes, haftaRes, tahsilatRes, alacakRes, customerRes, monthCountRes, talepRes] =
           await Promise.all([
             supabase.from("isler").select(isSecim).eq("tarih", today).order("saat", { ascending: true }),
             supabase.from("isler").select(isSecim).eq("tarih", yarin).order("saat", { ascending: true }),
@@ -43,6 +45,7 @@ export default function AdminDashboard() {
             supabase.from("isler").select("id, tutar").in("odeme_durumu", ["odenmedi", "kismi"]).eq("durum", "tamamlandi"),
             supabase.from("musteriler").select("id", { count: "exact", head: true }),
             supabase.from("isler").select("id", { count: "exact", head: true }).gte("tarih", monthStart),
+            supabase.from("talepler").select("id", { count: "exact", head: true }).eq("durum", "yeni"),
           ]);
 
         if (cancelled) return;
@@ -65,6 +68,7 @@ export default function AdminDashboard() {
         setTodayJobs((jobsRes.data as Is[]) || []);
         setYarinJobs((yarinRes.data as Is[]) || []);
         setHaftaSayisi(haftaRes.count || 0);
+        setYeniTalep(talepRes.count || 0);
         setTahsilatlar((tahsilatRes.data as Pick<Odeme, "tarih" | "tutar">[]) || []);
         setStats({
           alacak: acikIsler.reduce((s, i) => s + kalanBakiye(i.tutar, odenenler.get(i.id) ?? 0), 0),
@@ -265,6 +269,15 @@ export default function AdminDashboard() {
           <Link href="/admin/geri-kazanim" className="bg-white border border-gray-200 text-gray-800 rounded-2xl p-4 text-center font-medium active:bg-gray-50 col-span-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mx-auto mb-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
             Geri Kazanım
+          </Link>
+          <Link href="/admin/talepler" className="bg-white border border-gray-200 text-gray-800 rounded-2xl p-4 text-center font-medium active:bg-gray-50 col-span-2 relative">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mx-auto mb-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></svg>
+            Site Talepleri
+            {yeniTalep > 0 && (
+              <span className="absolute top-2 right-3 bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {yeniTalep}
+              </span>
+            )}
           </Link>
         </div>
       </div>
