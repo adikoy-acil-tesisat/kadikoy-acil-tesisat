@@ -1,3 +1,6 @@
+/** Google Ads ölçüm etiketi. Gizli değildir, sayfa kaynağında görünür. */
+export const GOOGLE_ADS_ID = "AW-18442854096";
+
 /** Çerez onayının tarayıcıda saklandığı anahtar. */
 export const CEREZ_ANAHTARI = "cookie-consent";
 
@@ -10,5 +13,10 @@ export const CEREZ_ANAHTARI = "cookie-consent";
  */
 export function analitikOnayiBildir(): void {
   const g = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag;
-  g?.("consent", "update", { analytics_storage: "granted" });
+  g?.("consent", "update", {
+    analytics_storage: "granted",
+    ad_storage: "granted",
+    ad_user_data: "granted",
+    ad_personalization: "granted",
+  });
 }

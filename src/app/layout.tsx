@@ -8,7 +8,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import MobileBottomBar from "@/components/MobileBottomBar";
 import ScrollToTop from "@/components/ScrollToTop";
 import CookieBanner from "@/components/CookieBanner";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
+import GoogleEtiketleri from "@/components/GoogleEtiketleri";
 import { SITE_CONFIG, SITE_URL, SERVICES, GOOGLE_DOGRULAMA } from "@/lib/constants";
 import { KADIKOY_MAHALLELERI } from "@/lib/mahalleler";
 
@@ -133,7 +133,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <GoogleAnalytics />
+        <GoogleEtiketleri />
         <SiteChrome>
           <Header />
         </SiteChrome>
