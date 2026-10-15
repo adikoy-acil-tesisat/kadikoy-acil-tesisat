@@ -16,6 +16,7 @@ import { HIZMET_TURLERI, DURUM_MAP, ODEME_DURUM_MAP, type Is } from "@/lib/types
  */
 const FILTERS = [
   { key: "tumu", label: "Tümü" },
+  { key: "kesif", label: "Keşif" },
   { key: "beklemede", label: "Beklemede" },
   { key: "devam_ediyor", label: "Devam" },
   { key: "tamamlandi", label: "Bitti" },
@@ -70,6 +71,14 @@ function JobCard({ job, onDurum }: { job: Is; onDurum: (id: string, durum: strin
             Ara
           </a>
         )}
+        {job.durum === "kesif" && (
+          <Link
+            href={`/admin/isler/${job.id}`}
+            className="flex-1 bg-purple-50 text-purple-700 py-2 rounded-lg text-xs font-semibold text-center"
+          >
+            Teklif Gir
+          </Link>
+        )}
         {job.durum === "beklemede" && (
           <button
             onClick={() => onDurum(job.id, "devam_ediyor")}
@@ -78,7 +87,7 @@ function JobCard({ job, onDurum }: { job: Is; onDurum: (id: string, durum: strin
             Başlat
           </button>
         )}
-        {job.durum !== "tamamlandi" && job.durum !== "iptal" && (
+        {job.durum !== "tamamlandi" && job.durum !== "iptal" && job.durum !== "kesif" && (
           <button
             onClick={() => onDurum(job.id, "tamamlandi")}
             className="flex-1 bg-green-50 text-green-700 py-2 rounded-lg text-xs font-semibold"
@@ -149,10 +158,22 @@ export default function IslerPage() {
    */
   async function durumDegistir(id: string, yeniDurum: string) {
     const oncekiler = jobs;
-    setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, durum: yeniDurum } : j)));
+    const simdi = new Date().toISOString();
+    const mevcut = jobs.find((j) => j.id === id);
+
+    // Süre damgaları: listeden başlatıp bitirmek de detay sayfasıyla aynı
+    // veriyi üretmeli, yoksa süre kaydı listeyi kullanan işlerde hiç oluşmaz.
+    const guncel: Record<string, unknown> = { durum: yeniDurum };
+    if (yeniDurum === "devam_ediyor" && !mevcut?.baslama_saati) guncel.baslama_saati = simdi;
+    if (yeniDurum === "tamamlandi") {
+      guncel.bitis_saati = simdi;
+      if (!mevcut?.baslama_saati) guncel.baslama_saati = simdi;
+    }
+
+    setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...guncel, durum: yeniDurum } : j)));
 
     const supabase = createClient();
-    const { error } = await supabase.from("isler").update({ durum: yeniDurum }).eq("id", id);
+    const { error } = await supabase.from("isler").update(guncel).eq("id", id);
     if (error) {
       setJobs(oncekiler);
       alert("Durum değiştirilemedi. " + dbHataMesaji(error));

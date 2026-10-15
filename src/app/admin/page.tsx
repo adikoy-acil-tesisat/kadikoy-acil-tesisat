@@ -44,7 +44,8 @@ export default function AdminDashboard() {
             supabase.from("odemeler").select("tarih, tutar").gte("tarih", oncekiAy),
             supabase.from("isler").select("id, tutar").in("odeme_durumu", ["odenmedi", "kismi"]).eq("durum", "tamamlandi"),
             supabase.from("musteriler").select("id", { count: "exact", head: true }),
-            supabase.from("isler").select("id", { count: "exact", head: true }).gte("tarih", monthStart),
+            // Keşif ve iptal "yapılan iş" değil; sayıya girerse rakam şişer
+            supabase.from("isler").select("id", { count: "exact", head: true }).gte("tarih", monthStart).not("durum", "in", "(kesif,iptal)"),
             supabase.from("talepler").select("id", { count: "exact", head: true }).eq("durum", "yeni"),
           ]);
 

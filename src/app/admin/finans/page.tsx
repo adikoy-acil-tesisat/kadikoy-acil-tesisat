@@ -47,6 +47,8 @@ export default function FinansPage() {
   const [ay, setAy] = useState(buAy);
 
   const [tahsilatlar, setTahsilatlar] = useState<Tahsilat[]>([]);
+  /** Seçili dönemdeki işler — keşif dönüşümü ve süre analizi için. */
+  const [donemIsleri, setDonemIsleri] = useState<Is[]>([]);
   const [unpaidJobs, setUnpaidJobs] = useState<Is[]>([]);
   /** Ödenmemiş işlerde o ana kadar tahsil edilen tutarlar (is_id -> toplam). */
   const [kismiOdenen, setKismiOdenen] = useState<Map<string, number>>(new Map());
@@ -71,9 +73,16 @@ export default function FinansPage() {
     const [tahsilatRes, unpaidRes, expRes, trendRes] = await Promise.all([
       supabase.from("odemeler").select("*, is:isler(hizmet_turu, ilce, musteri:musteriler(ad))").gte("tarih", bas).lte("tarih", son).order("tarih", { ascending: false }),
       supabase.from("isler").select("*, musteri:musteriler(ad, telefon)").in("odeme_durumu", ["odenmedi", "kismi"]).eq("durum", "tamamlandi").order("tarih", { ascending: false }),
-      supabase.from("giderler").select("*").gte("tarih", bas).lte("tarih", son).order("tarih", { ascending: false }),
+      supabase.from("giderler").select("*, is:isler(hizmet_turu)").gte("tarih", bas).lte("tarih", son).order("tarih", { ascending: false }),
       supabase.from("odemeler").select("tarih, tutar, is:isler(hizmet_turu, ilce, musteri:musteriler(ad))").gte("tarih", trendBas),
     ]);
+
+    const isRes = await supabase
+      .from("isler")
+      .select("id, hizmet_turu, durum, teklif_tutari, baslama_saati, bitis_saati")
+      .gte("tarih", bas)
+      .lte("tarih", son);
+    setDonemIsleri((isRes.data as Is[]) || []);
 
     const acik = (unpaidRes.data as Is[]) || [];
     const kismiRes = acik.length
@@ -191,6 +200,57 @@ export default function FinansPage() {
     }
     return [...m.entries()].sort((a, b) => b[1].tutar - a[1].tutar).slice(0, 6);
   }, [trendTahsilat]);
+
+  /**
+   * Hizmet türüne göre kâr: tahsilattan o işe harcanan malzeme düşülür.
+   * "Hangi iş gerçekten kazandırıyor" sorusunun cevabı burada.
+   */
+  const hizmetKarlilik = useMemo(() => {
+    const m = new Map<string, { gelir: number; gider: number }>();
+    for (const o of tahsilatlar) {
+      const k = o.is?.hizmet_turu;
+      if (!k) continue;
+      const v = m.get(k) ?? { gelir: 0, gider: 0 };
+      m.set(k, { ...v, gelir: v.gelir + (Number(o.tutar) || 0) });
+    }
+    for (const g of expenses) {
+      const k = (g as Gider & { is?: { hizmet_turu: string } | null }).is?.hizmet_turu;
+      if (!k) continue;
+      const v = m.get(k) ?? { gelir: 0, gider: 0 };
+      m.set(k, { ...v, gider: v.gider + (Number(g.tutar) || 0) });
+    }
+    return [...m.entries()]
+      .map(([k, v]) => ({ k, ...v, kar: v.gelir - v.gider }))
+      .sort((a, b) => b.kar - a.kar);
+  }, [tahsilatlar, expenses]);
+
+  /** Keşiften işe dönüşüm. Teklif tutarı girilmiş kayıtlar keşiftir. */
+  const kesifOzeti = useMemo(() => {
+    const kesifler = donemIsleri.filter((i) => i.teklif_tutari != null || i.durum === "kesif");
+    const donusen = kesifler.filter((i) => i.durum !== "kesif" && i.durum !== "iptal");
+    return {
+      toplam: kesifler.length,
+      donusen: donusen.length,
+      oran: kesifler.length > 0 ? Math.round((donusen.length / kesifler.length) * 100) : 0,
+    };
+  }, [donemIsleri]);
+
+  /** Hizmet türüne göre ortalama iş süresi. */
+  const sureOzeti = useMemo(() => {
+    const m = new Map<string, { toplamDk: number; adet: number }>();
+    for (const i of donemIsleri) {
+      if (!i.baslama_saati || !i.bitis_saati) continue;
+      const dk = Math.round(
+        (new Date(i.bitis_saati).getTime() - new Date(i.baslama_saati).getTime()) / 60000
+      );
+      if (dk <= 0) continue;
+      const v = m.get(i.hizmet_turu) ?? { toplamDk: 0, adet: 0 };
+      m.set(i.hizmet_turu, { toplamDk: v.toplamDk + dk, adet: v.adet + 1 });
+    }
+    return [...m.entries()]
+      .map(([k, v]) => ({ k, ortalama: Math.round(v.toplamDk / v.adet), adet: v.adet }))
+      .sort((a, b) => b.adet - a.adet);
+  }, [donemIsleri]);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "ozet", label: "Özet" },
@@ -444,6 +504,73 @@ export default function FinansPage() {
 
           {tab === "istatistik" && (
             <div className="space-y-4">
+              {/* Hizmete göre kâr — cironun değil, kârın hangi işten geldiği */}
+              {hizmetKarlilik.length > 0 && (
+                <div className="bg-white rounded-xl p-4 border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-1">Hizmete Göre Kâr</h3>
+                  <p className="text-xs text-gray-400 mb-4">Tahsilat eksi o işe giden malzeme</p>
+                  <div className="space-y-3">
+                    {hizmetKarlilik.map((h) => (
+                      <div key={h.k}>
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-gray-700">{HIZMET_TURLERI[h.k] ?? h.k}</span>
+                          <span className="font-bold text-gray-900 tabular-nums">{para(h.kar)}</span>
+                        </div>
+                        <div className="flex gap-1 text-[11px] text-gray-400">
+                          <span className="text-green-600">{para(h.gelir)}</span>
+                          {h.gider > 0 && <span className="text-red-500">− {para(h.gider)}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Keşif dönüşümü — verilen tekliflerin kaçı işe döndü */}
+              {kesifOzeti.toplam > 0 && (
+                <div className="bg-white rounded-xl p-4 border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-1">Keşif Dönüşümü</h3>
+                  <p className="text-xs text-gray-400 mb-3">Verilen tekliflerin kaçı işe döndü</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold text-purple-700 tabular-nums">
+                      %{kesifOzeti.oran}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {kesifOzeti.toplam} keşiften {kesifOzeti.donusen} iş
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full mt-3 overflow-hidden">
+                    <div
+                      className="h-full bg-purple-600 rounded-full"
+                      style={{ width: `${kesifOzeti.oran}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Ortalama süre — fiyatlandırmanın dayanağı */}
+              {sureOzeti.length > 0 && (
+                <div className="bg-white rounded-xl p-4 border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-1">Ortalama İş Süresi</h3>
+                  <p className="text-xs text-gray-400 mb-3">Başlat–bitir damgası olan işlerden</p>
+                  <div className="space-y-2">
+                    {sureOzeti.map((h) => (
+                      <div key={h.k} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">{HIZMET_TURLERI[h.k] ?? h.k}</span>
+                        <span className="text-gray-900">
+                          <span className="font-semibold">
+                            {h.ortalama < 60
+                              ? `${h.ortalama} dk`
+                              : `${Math.floor(h.ortalama / 60)} sa ${h.ortalama % 60} dk`}
+                          </span>
+                          <span className="text-gray-400 text-xs"> · {h.adet} iş</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="bg-white rounded-xl p-4 border border-gray-200">
                 <h3 className="font-bold text-gray-900 mb-1">Son 6 Ay Gelir</h3>
                 <p className="text-xs text-gray-400 mb-4">Tahsil edilmiş işler</p>

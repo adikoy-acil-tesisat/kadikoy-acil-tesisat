@@ -26,6 +26,11 @@ export interface Is {
   tarih: string;
   saat?: string | null;
   tutar?: number | null;
+  /** Keşifte verilen teklif. Kabul edilirse tutar olur, edilmezse kayıtta kalır. */
+  teklif_tutari?: number | null;
+  /** İşe fiilen başlanan an — süre buradan hesaplanır. */
+  baslama_saati?: string | null;
+  bitis_saati?: string | null;
   odeme_durumu: string;
   odeme_yontemi?: string | null;
   notlar?: string | null;
@@ -69,6 +74,7 @@ export const HIZMET_TURLERI: Record<string, string> = {
 };
 
 export const DURUM_MAP: Record<string, { label: string; color: string; bg: string }> = {
+  kesif: { label: "Keşif/Teklif", color: "text-purple-700", bg: "bg-purple-100" },
   beklemede: { label: "Beklemede", color: "text-amber-700", bg: "bg-amber-100" },
   devam_ediyor: { label: "Devam Ediyor", color: "text-blue-700", bg: "bg-blue-100" },
   tamamlandi: { label: "Tamamlandı", color: "text-green-700", bg: "bg-green-100" },

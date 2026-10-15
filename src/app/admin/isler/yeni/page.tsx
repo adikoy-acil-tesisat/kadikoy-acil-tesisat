@@ -25,6 +25,8 @@ export default function YeniIsPage() {
   const [tarih, setTarih] = useState(todayISO());
   const [saat, setSaat] = useState("");
   const [tutar, setTutar] = useState("");
+  /** Keşif kaydı: fiyat henüz belli değil, teklif aşamasında girilecek. */
+  const [kesif, setKesif] = useState(false);
   const [aciklama, setAciklama] = useState("");
   const [ilce, setIlce] = useState("");
   const [adres, setAdres] = useState("");
@@ -115,11 +117,11 @@ export default function YeniIsPage() {
       hizmet_turu: hizmetTuru,
       tarih,
       saat: saat || null,
-      tutar: tutar ? parseFloat(tutar) : null,
+      tutar: kesif ? null : tutar ? parseFloat(tutar) : null,
       aciklama: aciklama || null,
       ilce: ilce || null,
       adres: adres || null,
-      durum: "beklemede",
+      durum: kesif ? "kesif" : "beklemede",
       odeme_durumu: "odenmedi",
     });
 
@@ -218,8 +220,27 @@ export default function YeniIsPage() {
 
         {/* Amount */}
         <div>
+          {/*
+            Keşif kaydı. "Görmeden fiyat söylemem" diyen bir işte, gidip
+            bakılan ama henüz fiyatı konuşulmamış işler de kayda girmeli.
+          */}
+          <label className="flex items-center gap-3 mb-4 bg-purple-50 border border-purple-200 rounded-xl p-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={kesif}
+              onChange={(e) => setKesif(e.target.checked)}
+              className="w-5 h-5 accent-purple-600"
+            />
+            <span className="text-sm">
+              <span className="font-semibold text-purple-900">Bu bir keşif</span>
+              <span className="block text-xs text-purple-700">
+                Fiyat henüz belli değil. Teklifi iş detayından girersiniz.
+              </span>
+            </span>
+          </label>
+
           <label className="block text-sm font-semibold text-gray-700 mb-1">Tutar (₺)</label>
-          <input type="number" value={tutar} onChange={(e) => setTutar(e.target.value)} placeholder="Örn: 500" inputMode="numeric" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+          <input type="number" value={kesif ? "" : tutar} onChange={(e) => setTutar(e.target.value)} disabled={kesif} placeholder={kesif ? "Keşif sonrası girilecek" : "Örn: 500"} inputMode="numeric" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
         </div>
 
         {/* District & Address */}

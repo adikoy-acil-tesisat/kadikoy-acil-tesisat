@@ -6,11 +6,13 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { toIntlPhone, todayISO } from "@/lib/date";
-import { para, tarihUzun, tarihKisa, saatKisa } from "@/lib/format";
+import { para, tarihUzun, tarihKisa, saatKisa, sureMetni } from "@/lib/format";
 import { yolTarifiLinki } from "@/lib/harita";
 import { SITE_CONFIG } from "@/lib/constants";
 import IsFotograflari from "@/components/IsFotograflari";
 import { kalanBakiye, odemeDurumu } from "@/lib/tahsilat";
+import { GIDER_KATEGORILERI, type Gider } from "@/lib/types";
+import { fotografYukle } from "@/lib/foto";
 import {
   HIZMET_TURLERI,
   DURUM_MAP,
@@ -48,19 +50,29 @@ export default function IsDetayPage() {
     notlar: "",
   });
 
+  /** Bu işe bağlı malzeme/gider kayıtları — net kâr buradan çıkıyor. */
+  const [giderler, setGiderler] = useState<Gider[]>([]);
+  const [giderFormAcik, setGiderFormAcik] = useState(false);
+  const [giderKat, setGiderKat] = useState("malzeme");
+  const [giderAcik, setGiderAcik] = useState("");
+  const [giderTutar, setGiderTutar] = useState("");
+  const [giderFis, setGiderFis] = useState<File | null>(null);
+
   const [odemeFormAcik, setOdemeFormAcik] = useState(false);
   const [odemeTutar, setOdemeTutar] = useState("");
   const [odemeYontem, setOdemeYontem] = useState("nakit");
 
   const yukle = useCallback(async () => {
     const supabase = createClient();
-    const [isRes, odemeRes] = await Promise.all([
+    const [isRes, odemeRes, giderRes] = await Promise.all([
       supabase.from("isler").select("*, musteri:musteriler(*)").eq("id", isId).single(),
       supabase.from("odemeler").select("*").eq("is_id", isId).order("tarih", { ascending: false }),
+      supabase.from("giderler").select("*").eq("is_id", isId).order("tarih", { ascending: false }),
     ]);
     const veri = (isRes.data as Is) ?? null;
     setJob(veri);
     setOdemeler((odemeRes.data as Odeme[]) || []);
+    setGiderler((giderRes.data as Gider[]) || []);
     if (veri) {
       setForm({
         hizmet_turu: veri.hizmet_turu,
@@ -261,6 +273,80 @@ export default function IsDetayPage() {
     return satirlar.join("\n");
   }
 
+  async function giderEkle() {
+    const t = parseFloat(giderTutar);
+    if (!giderAcik.trim() || !Number.isFinite(t) || t <= 0) {
+      alert("Açıklama ve geçerli bir tutar girin.");
+      return;
+    }
+    setSaving(true);
+    try {
+      let fisUrl: string | null = null;
+      if (giderFis) fisUrl = await fotografYukle(giderFis);
+
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("giderler")
+        .insert({
+          is_id: isId,
+          kategori: giderKat,
+          aciklama: giderAcik.trim(),
+          tutar: t,
+          tarih: todayISO(),
+          fis_url: fisUrl,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+
+      setGiderler((prev) => [data as Gider, ...prev]);
+      setGiderAcik("");
+      setGiderTutar("");
+      setGiderFis(null);
+      setGiderFormAcik(false);
+    } catch (e) {
+      alert("Gider eklenemedi. " + dbHataMesaji(e));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function giderSil(g: Gider) {
+    if (!confirm(`"${g.aciklama}" gideri silinsin mi?`)) return;
+    const oncekiler = giderler;
+    setGiderler((prev) => prev.filter((x) => x.id !== g.id));
+    const { error } = await createClient().from("giderler").delete().eq("id", g.id);
+    if (error) {
+      setGiderler(oncekiler);
+      alert("Silinemedi. " + dbHataMesaji(error));
+    }
+  }
+
+  /** İşe başlama/bitiş damgası. Süre buradan hesaplanıyor. */
+  async function isiBaslat() {
+    await updateJob({ durum: "devam_ediyor", baslama_saati: new Date().toISOString() });
+  }
+
+  async function isiTamamla() {
+    const guncel: Record<string, unknown> = {
+      durum: "tamamlandi",
+      bitis_saati: new Date().toISOString(),
+    };
+    // Başlat'a basılmadan tamamlanırsa süre hesaplanamaz; en azından bitişi yaz
+    if (!job?.baslama_saati) guncel.baslama_saati = new Date().toISOString();
+    await updateJob(guncel);
+  }
+
+  /** Keşifte verilen teklif kabul edildi: tutar olarak işlenip işe dönüşür. */
+  async function teklifKabul() {
+    const t = Number(job?.teklif_tutari) || 0;
+    if (t <= 0) {
+      alert("Önce teklif tutarını girin.");
+      return;
+    }
+    await updateJob({ durum: "beklemede", tutar: t });
+  }
+
   async function deleteJob() {
     if (!confirm("Bu işi silmek istediğinize emin misiniz? Tahsilat kayıtları da silinir.")) return;
     const supabase = createClient();
@@ -283,6 +369,9 @@ export default function IsDetayPage() {
 
   const musteri = job.musteri as Musteri | null;
   const toplamOdenen = odemeler.reduce((s, o) => s + Number(o.tutar), 0);
+  const toplamGider = giderler.reduce((s, g) => s + (Number(g.tutar) || 0), 0);
+  /** Net kâr: tahsil edilen para eksi bu işe harcanan malzeme. */
+  const netKar = toplamOdenen - toplamGider;
   const kalan = job.tutar != null ? Number(job.tutar) - toplamOdenen : null;
 
   // İşin kendi adresi yoksa müşterinin kayıtlı adresine düşüyoruz
@@ -427,6 +516,212 @@ export default function IsDetayPage() {
         </div>
       )}
 
+      {/*
+        Keşif aşaması. Keşfe gidilip teklif verilen ama kabul edilmeyen işler
+        eskiden "iptal" olup kayboluyordu; kaç keşiften kaç iş çıktığı
+        bilinmiyordu. Teklif tutarı ayrı tutuluyor.
+      */}
+      {job.durum === "kesif" && (
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 space-y-3">
+          <h2 className="font-bold text-purple-900">Keşif / Teklif</h2>
+          <div>
+            <label className="block text-sm font-semibold text-purple-900 mb-1">
+              Verilen teklif (₺)
+            </label>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={job.teklif_tutari != null ? String(job.teklif_tutari) : ""}
+              onChange={(e) =>
+                setJob((p) =>
+                  p ? { ...p, teklif_tutari: e.target.value ? Number(e.target.value) : null } : p
+                )
+              }
+              onBlur={(e) =>
+                updateJob({ teklif_tutari: e.target.value ? Number(e.target.value) : null })
+              }
+              placeholder="Örn: 2500"
+              className="w-full px-3 py-2.5 border border-purple-200 rounded-xl text-sm"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={teklifKabul}
+              disabled={saving}
+              className="flex-1 bg-green-600 disabled:bg-green-400 text-white font-semibold py-2.5 rounded-xl text-sm"
+            >
+              Teklif kabul edildi
+            </button>
+            <button
+              onClick={() => updateJob({ durum: "iptal" })}
+              disabled={saving}
+              className="flex-1 bg-white border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl text-sm"
+            >
+              Kabul edilmedi
+            </button>
+          </div>
+          <p className="text-xs text-purple-700">
+            Kabul edilmese bile kayıt kalır. Kaç keşiften kaç iş çıktığını böyle görürsünüz.
+          </p>
+        </div>
+      )}
+
+      {/* Süre takibi — fiyatın temel belirleyicilerinden biri süre */}
+      {(job.baslama_saati || job.durum === "beklemede") && (
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-bold text-gray-900">Süre</h2>
+              {job.baslama_saati ? (
+                <p className="text-sm text-gray-500">
+                  {job.bitis_saati ? "Toplam" : "Devam ediyor"} ·{" "}
+                  <span className="font-semibold text-gray-900">
+                    {sureMetni(job.baslama_saati, job.bitis_saati)}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500">Henüz başlanmadı</p>
+              )}
+            </div>
+            {!job.baslama_saati && job.durum === "beklemede" && (
+              <button
+                onClick={isiBaslat}
+                disabled={saving}
+                className="bg-blue-600 disabled:bg-blue-400 text-white font-semibold py-2 px-4 rounded-xl text-sm"
+              >
+                ▶ Başlat
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Malzeme ve giderler — net kârın diğer yarısı */}
+      <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-gray-900">Malzeme & Gider</h2>
+          {toplamGider > 0 && (
+            <span className="text-sm font-bold text-red-600 tabular-nums">
+              -{para(toplamGider)}
+            </span>
+          )}
+        </div>
+
+        {giderler.length > 0 && (
+          <div className="space-y-2">
+            {giderler.map((g) => (
+              <div key={g.id} className="flex items-center justify-between text-sm">
+                <div className="min-w-0">
+                  <p className="text-gray-900 truncate">{g.aciklama}</p>
+                  <p className="text-xs text-gray-400">
+                    {GIDER_KATEGORILERI[g.kategori] ?? g.kategori}
+                    {g.fis_url && (
+                      <>
+                        {" · "}
+                        <a
+                          href={g.fis_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600"
+                        >
+                          fiş
+                        </a>
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="font-semibold text-red-600 tabular-nums">{para(g.tutar)}</span>
+                  <button onClick={() => giderSil(g)} className="text-gray-300 text-lg leading-none">
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {giderFormAcik ? (
+          <div className="space-y-2 pt-2 border-t border-gray-100">
+            <select
+              value={giderKat}
+              onChange={(e) => setGiderKat(e.target.value)}
+              className="w-full px-3 py-2.5 border rounded-xl text-sm bg-white"
+            >
+              {Object.entries(GIDER_KATEGORILERI).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={giderAcik}
+              onChange={(e) => setGiderAcik(e.target.value)}
+              placeholder="Ne alındı? *"
+              className="w-full px-3 py-2.5 border rounded-xl text-sm"
+            />
+            <input
+              type="number"
+              inputMode="numeric"
+              value={giderTutar}
+              onChange={(e) => setGiderTutar(e.target.value)}
+              placeholder="Tutar (₺) *"
+              className="w-full px-3 py-2.5 border rounded-xl text-sm"
+            />
+            <label className="block">
+              <span className="sr-only">Fiş fotoğrafı</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setGiderFis(e.target.files?.[0] ?? null)}
+                className="block w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700"
+              />
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={giderEkle}
+                disabled={saving}
+                className="flex-1 bg-gray-900 disabled:bg-gray-500 text-white font-semibold py-2.5 rounded-xl text-sm"
+              >
+                {saving ? "Kaydediliyor..." : "Kaydet"}
+              </button>
+              <button
+                onClick={() => setGiderFormAcik(false)}
+                className="px-4 bg-gray-100 text-gray-600 rounded-xl text-sm"
+              >
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setGiderFormAcik(true)}
+            className="w-full py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500"
+          >
+            + Malzeme / Gider Ekle
+          </button>
+        )}
+
+        {/* Net kâr — bu işin size gerçekte ne bıraktığı */}
+        {(toplamOdenen > 0 || toplamGider > 0) && (
+          <div className="pt-3 border-t border-gray-100 space-y-1 text-sm">
+            <div className="flex justify-between text-gray-500">
+              <span>Tahsil edilen</span>
+              <span className="tabular-nums text-green-600">{para(toplamOdenen)}</span>
+            </div>
+            <div className="flex justify-between text-gray-500">
+              <span>Malzeme</span>
+              <span className="tabular-nums text-red-600">-{para(toplamGider)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-gray-900 pt-1">
+              <span>Net kâr</span>
+              <span className={`tabular-nums ${netKar >= 0 ? "text-green-700" : "text-red-700"}`}>
+                {para(netKar)}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
       <IsFotograflari
         isId={isId}
         fotograflar={job.fotograflar ?? []}
@@ -555,7 +850,7 @@ export default function IsDetayPage() {
 
       {job.durum !== "tamamlandi" && (
         <button
-          onClick={() => updateJob({ durum: "tamamlandi" })}
+          onClick={isiTamamla}
           disabled={saving}
           className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-4 rounded-xl text-lg transition-colors"
         >

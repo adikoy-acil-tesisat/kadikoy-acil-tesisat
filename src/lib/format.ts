@@ -35,3 +35,17 @@ export function ayAdi(ayIso: string): string {
 export function saatKisa(saat: string | null | undefined): string {
   return saat ? saat.slice(0, 5) : "";
 }
+
+/**
+ * İki zaman damgası arasındaki süreyi okunur hâle getirir: "1 sa 25 dk".
+ * Bitiş yoksa (iş devam ediyorsa) şu ana kadar geçen süreyi verir.
+ */
+export function sureMetni(baslangic: string, bitis?: string | null): string {
+  const bas = new Date(baslangic).getTime();
+  const son = bitis ? new Date(bitis).getTime() : Date.now();
+  const dakika = Math.max(0, Math.round((son - bas) / 60000));
+  if (dakika < 60) return `${dakika} dk`;
+  const saat = Math.floor(dakika / 60);
+  const kalan = dakika % 60;
+  return kalan === 0 ? `${saat} sa` : `${saat} sa ${kalan} dk`;
+}
