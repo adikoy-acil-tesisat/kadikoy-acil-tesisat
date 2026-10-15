@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { galeriGetir } from "@/lib/galeri";
+import { bulunmaEki } from "@/lib/turkce";
+import GaleriSeridi from "@/components/GaleriSeridi";
 import { SITE_CONFIG, SERVICES } from "@/lib/constants";
 import { ONE_CIKAN_MAHALLELER, getMahalle } from "@/lib/mahalleler";
+
+// Panelden yeni fotoğraf yayınlandığında sayfa en geç 5 dakikada tazelenir.
+export const revalidate = 300;
 
 export function generateStaticParams() {
   return ONE_CIKAN_MAHALLELER.map((m) => ({ mahalle: m.id }));
@@ -31,6 +37,15 @@ export default async function MahallePage({
   const { mahalle } = await params;
   const m = getMahalle(mahalle);
   if (!m) notFound();
+
+  // Önce o mahallede çekilmiş işler; yoksa Kadıköy genelinden.
+  // Panelde resmî ad kaydedilmiş olabilir ("Eğitim" ↔ "Eğitim Mahallesi")
+  const mahalleFoto = await galeriGetir({
+    mahalle: [m.name, m.resmiAd].filter(Boolean) as string[],
+    limit: 4,
+  });
+  const fotograflar = mahalleFoto.length > 0 ? mahalleFoto : await galeriGetir({ limit: 4 });
+  const fotoMahalleden = mahalleFoto.length > 0;
 
   const digerleri = ONE_CIKAN_MAHALLELER.filter((x) => x.id !== m.id);
 
@@ -64,7 +79,7 @@ export default async function MahallePage({
               </a>
               <a
                 href={`https://wa.me/${SITE_CONFIG.whatsapp}?text=${encodeURIComponent(
-                  `Merhaba, ${m.name}'de tesisat hizmeti almak istiyorum.`
+                  `Merhaba, ${bulunmaEki(m.name)} tesisat hizmeti almak istiyorum.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -132,6 +147,16 @@ export default async function MahallePage({
       </section>
 
       {/* Civar */}
+      <GaleriSeridi
+        kayitlar={fotograflar}
+        baslik={fotoMahalleden ? `${bulunmaEki(m.name)} Yaptığımız İşler` : "Sahadan Kareler"}
+        altBaslik={
+          fotoMahalleden
+            ? `${m.name} ve çevresinde tamamladığımız işlerden gerçek fotoğraflar.`
+            : "Kadıköy'de yaptığımız işlerden gerçek fotoğraflar. Stok görsel kullanmıyoruz."
+        }
+      />
+
       <section className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">{m.name} ve Çevresi</h2>

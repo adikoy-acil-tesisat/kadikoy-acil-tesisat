@@ -232,6 +232,35 @@ export default function IsDetayPage() {
     setSaving(false);
   }
 
+  /**
+   * Müşteriye gönderilecek iş özeti.
+   *
+   * Yalnızca kayıtta gerçekten olan bilgiyi yazar: uydurma tutar ya da
+   * yapılmamış iş satırı eklemez. Tahsil edilmemiş bakiye varsa onu da
+   * açıkça yazar; müşteri "ne kadar kaldı" diye aramak zorunda kalmasın.
+   */
+  function isOzetiMetni(): string {
+    const ad = musteri?.ad ? `${musteri.ad}, ` : "";
+    const hizmet = HIZMET_TURLERI[job?.hizmet_turu ?? ""] ?? "tesisat";
+    const satirlar: string[] = [
+      `Merhaba ${ad}bugün ${hizmet.toLocaleLowerCase("tr")} işinizi tamamladık.`,
+    ];
+
+    if (job?.aciklama?.trim()) satirlar.push(`Yapılan iş: ${job.aciklama.trim()}`);
+    if (job?.tutar != null) satirlar.push(`Tutar: ${para(job.tutar)}`);
+
+    const kalan = kalanBakiye(job?.tutar, toplamOdenen);
+    if (kalan > 0) satirlar.push(`Kalan bakiye: ${para(kalan)}`);
+    else if (job?.tutar != null) satirlar.push("Ödemeniz alınmıştır, teşekkür ederiz.");
+
+    satirlar.push(
+      "Kullandığımız malzemeler garantilidir. Aynı yerde sorun çıkarsa ücretsiz tekrar geliriz."
+    );
+    satirlar.push(`${SITE_CONFIG.name} · ${SITE_CONFIG.phoneFormatted}`);
+
+    return satirlar.join("\n");
+  }
+
   async function deleteJob() {
     if (!confirm("Bu işi silmek istediğinize emin misiniz? Tahsilat kayıtları da silinir.")) return;
     const supabase = createClient();
@@ -532,6 +561,24 @@ export default function IsDetayPage() {
         >
           ✓ İşi Tamamla
         </button>
+      )}
+
+      {/*
+        İş özeti. Müşteri çoğu zaman ne yapıldığını tam anlamadan kalıyor ve
+        tutar aklında yanlış kalabiliyor. Bitince yazılı özet göndermek hem
+        sonraki anlaşmazlığı önlüyor hem de profesyonel duruyor.
+      */}
+      {job.durum === "tamamlandi" && musteri?.telefon && (
+        <a
+          href={`https://wa.me/${toIntlPhone(musteri.telefon)}?text=${encodeURIComponent(
+            isOzetiMetni()
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3.5 rounded-xl transition-colors"
+        >
+          📄 Müşteriye İş Özeti Gönder
+        </a>
       )}
 
       {/*

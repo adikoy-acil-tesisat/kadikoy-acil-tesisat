@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { SITE_CONFIG, SERVICES, FAQ_ITEMS } from "@/lib/constants";
 import { ONE_CIKAN_MAHALLELER } from "@/lib/mahalleler";
+import { galeriGetir } from "@/lib/galeri";
+import GaleriSeridi from "@/components/GaleriSeridi";
 
 function HeroSection() {
   return (
@@ -396,12 +398,23 @@ function CTASection() {
   );
 }
 
-export default function Home() {
+// Panelden yeni fotoğraf yayınlandığında ana sayfa en geç 5 dakikada tazelenir.
+export const revalidate = 300;
+
+export default async function Home() {
+  const fotograflar = await galeriGetir({ limit: 8 });
+
   return (
     <>
       <HeroSection />
       <ServicesSection />
       <EquipmentSection />
+      <GaleriSeridi
+        kayitlar={fotograflar}
+        baslik="Sahadan Kareler"
+        altBaslik="Kadıköy'de yaptığımız işlerden gerçek fotoğraflar. Stok görsel kullanmıyoruz."
+        zemin="gri"
+      />
       <DistrictsSection />
       <WhyUsSection />
       <SozVerdiklerimizSection />
