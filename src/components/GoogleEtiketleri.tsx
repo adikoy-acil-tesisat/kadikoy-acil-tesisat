@@ -1,7 +1,8 @@
 "use client";
 
 import Script from "next/script";
-import { CEREZ_ANAHTARI, GOOGLE_ADS_ID } from "@/lib/cerez";
+import { CEREZ_ANAHTARI } from "@/lib/cerez";
+import { GOOGLE_ADS_ID, GOOGLE_ADS_DONUSUM } from "@/lib/olcum";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
@@ -65,17 +66,24 @@ export default function GoogleEtiketleri() {
             var link = e.target.closest('a');
             if (!link) return;
             var href = link.getAttribute('href') || '';
+            var iletisim = false;
             if (href.startsWith('tel:')) {
               gtag('event', 'phone_call', {
                 event_category: 'contact',
                 event_label: location.pathname
               });
+              iletisim = true;
             }
             if (href.includes('wa.me')) {
               gtag('event', 'whatsapp_click', {
                 event_category: 'contact',
                 event_label: location.pathname
               });
+              iletisim = true;
+            }
+            // Ads için dönüşüm. Reklam parasının karşılığı bu olayla ölçülüyor.
+            if (iletisim) {
+              gtag('event', 'conversion', { send_to: '${GOOGLE_ADS_DONUSUM}' });
             }
           });
         `}

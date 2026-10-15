@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { donusumBildir } from "@/lib/olcum";
 import { SITE_CONFIG} from "@/lib/constants";
 import { KADIKOY_MAHALLELERI } from "@/lib/mahalleler";
 
@@ -43,6 +44,9 @@ export default function IletisimPage() {
       // Kayıt başarısız olsa bile müşteriyi engellemeyelim; WhatsApp açılsın.
     }
     setGonderiliyor(false);
+
+    // Form gönderimi de bir iletişim talebi; Ads'e dönüşüm olarak bildirilir.
+    donusumBildir();
 
     const whatsappText = `Merhaba, ben ${name}. Telefon: ${phone}. ${message}`;
     window.open(

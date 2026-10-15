@@ -1,6 +1,3 @@
-/** Google Ads ölçüm etiketi. Gizli değildir, sayfa kaynağında görünür. */
-export const GOOGLE_ADS_ID = "AW-18442854096";
-
 /** Çerez onayının tarayıcıda saklandığı anahtar. */
 export const CEREZ_ANAHTARI = "cookie-consent";
 
