@@ -13,6 +13,8 @@ export default function YeniIsPage() {
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Musteri | null>(null);
   const [showNewCustomer, setShowNewCustomer] = useState(false);
+  /** Kayıt site talebinden mi açıldı — müşterinin kaynağı buradan biliniyor. */
+  const [talepten, setTalepten] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // New customer fields
@@ -53,6 +55,7 @@ export default function YeniIsPage() {
       const talepTel = sorgu.get("telefon");
       if (talepAd && talepTel) {
         setShowNewCustomer(true);
+        setTalepten(true);
         setYeniAd(talepAd);
         setYeniTelefon(talepTel);
         const talepAciklama = sorgu.get("aciklama");
@@ -104,7 +107,13 @@ export default function YeniIsPage() {
     if (showNewCustomer && yeniAd && yeniTelefon) {
       const { data, error } = await supabase
         .from("musteriler")
-        .insert({ ad: yeniAd, telefon: yeniTelefon, ilce: yeniIlce || null })
+        .insert({
+          ad: yeniAd,
+          telefon: yeniTelefon,
+          ilce: yeniIlce || null,
+          // Site talebinden geliyorsa kaynağı biliyoruz; elle girişte sorulmuyor
+          kaynak: talepten ? "website" : null,
+        })
         .select()
         .single();
       if (error) { alert("Müşteri eklenemedi. " + dbHataMesaji(error)); setLoading(false); return; }

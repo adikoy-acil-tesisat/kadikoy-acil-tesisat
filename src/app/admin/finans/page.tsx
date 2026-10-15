@@ -9,6 +9,7 @@ import { todayISO, toIntlPhone } from "@/lib/date";
 import { para, ayAdi, tarihKisa } from "@/lib/format";
 import {
   HIZMET_TURLERI,
+  KAYNAKLAR,
   GIDER_KATEGORILERI,
   ODEME_YONTEMLERI,
   type Is,
@@ -71,10 +72,10 @@ export default function FinansPage() {
     // Gelir, paranın eline geçtiği tarihe göre sayılır — işin tarihine göre
     // değil. Bu yüzden hesaplar isler değil odemeler tablosundan çıkar.
     const [tahsilatRes, unpaidRes, expRes, trendRes] = await Promise.all([
-      supabase.from("odemeler").select("*, is:isler(hizmet_turu, ilce, musteri:musteriler(ad))").gte("tarih", bas).lte("tarih", son).order("tarih", { ascending: false }),
+      supabase.from("odemeler").select("*, is:isler(hizmet_turu, ilce, musteri:musteriler(ad, kaynak))").gte("tarih", bas).lte("tarih", son).order("tarih", { ascending: false }),
       supabase.from("isler").select("*, musteri:musteriler(ad, telefon)").in("odeme_durumu", ["odenmedi", "kismi"]).eq("durum", "tamamlandi").order("tarih", { ascending: false }),
       supabase.from("giderler").select("*, is:isler(hizmet_turu)").gte("tarih", bas).lte("tarih", son).order("tarih", { ascending: false }),
-      supabase.from("odemeler").select("tarih, tutar, is:isler(hizmet_turu, ilce, musteri:musteriler(ad))").gte("tarih", trendBas),
+      supabase.from("odemeler").select("tarih, tutar, is:isler(hizmet_turu, ilce, musteri:musteriler(ad, kaynak))").gte("tarih", trendBas),
     ]);
 
     const isRes = await supabase
@@ -251,6 +252,26 @@ export default function FinansPage() {
       .map(([k, v]) => ({ k, ortalama: Math.round(v.toplamDk / v.adet), adet: v.adet }))
       .sort((a, b) => b.adet - a.adet);
   }, [donemIsleri]);
+
+  /**
+   * Hangi kaynaktan ne kadar para geldi.
+   *
+   * Reklam harcamasının karşılığını görmenin tek yolu bu: Google Ads kaç
+   * tıklama aldığını söyler, kaç lira kazandırdığını söylemez.
+   */
+  const kaynakCiro = useMemo(() => {
+    const m = new Map<string, { tutar: number; adet: number }>();
+    for (const o of tahsilatlar) {
+      const k = o.is?.musteri?.kaynak || "bilinmiyor";
+      const v = m.get(k) ?? { tutar: 0, adet: 0 };
+      m.set(k, { tutar: v.tutar + (Number(o.tutar) || 0), adet: v.adet + 1 });
+    }
+    return [...m.entries()]
+      .map(([k, v]) => ({ k, ...v }))
+      .sort((a, b) => b.tutar - a.tutar);
+  }, [tahsilatlar]);
+
+  const kaynakToplam = kaynakCiro.reduce((s, k) => s + k.tutar, 0);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "ozet", label: "Özet" },
@@ -522,6 +543,40 @@ export default function FinansPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Müşteri nereden geldi — reklamın karşılığı burada görünür */}
+              {kaynakCiro.length > 0 && (
+                <div className="bg-white rounded-xl p-4 border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-1">Müşteri Nereden Geldi</h3>
+                  <p className="text-xs text-gray-400 mb-4">Tahsil edilen paranın kaynağı</p>
+                  <div className="space-y-3">
+                    {kaynakCiro.map((k) => {
+                      const oran = kaynakToplam > 0 ? Math.round((k.tutar / kaynakToplam) * 100) : 0;
+                      return (
+                        <div key={k.k}>
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-gray-700">
+                              {KAYNAKLAR[k.k] ?? "Bilinmiyor"}
+                              <span className="text-gray-400 text-xs"> · {k.adet} tahsilat</span>
+                            </span>
+                            <span className="font-semibold text-gray-900 tabular-nums">
+                              {para(k.tutar)} <span className="text-gray-400 text-xs">%{oran}</span>
+                            </span>
+                          </div>
+                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                k.k === "google_reklam" ? "bg-amber-500" : "bg-blue-500"
+                              }`}
+                              style={{ width: `${oran}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

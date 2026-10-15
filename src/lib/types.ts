@@ -118,14 +118,41 @@ export const MAHALLELER = [
   "Diğer",
 ];
 
+/**
+ * Müşteri bizi nereden buldu?
+ *
+ * Eskiden "Telefon" ve "WhatsApp" vardı; bunlar kaynak değil, iletişim
+ * kanalı. Müşteri telefonla arıyor ama numarayı Google reklamından mı,
+ * haritadan mı, komşusundan mı buldu — para harcanan yeri bilmek için
+ * ayırmak gerekiyor.
+ *
+ * Eski kayıtlarla uyum için "telefon" ve "whatsapp" anahtarları korundu.
+ */
 export const KAYNAKLAR: Record<string, string> = {
-  telefon: "Telefon",
-  whatsapp: "WhatsApp",
+  google_reklam: "Google Reklam",
+  google_arama: "Google Arama",
+  google_harita: "Google Haritalar",
   tavsiye: "Tavsiye",
+  website: "Site Formu",
   armut: "Armut.com",
-  website: "Web Sitesi",
+  arac_tabela: "Araç / Tabela",
   diger: "Diğer",
+  // Eski kayıtlar — yeni kayıtlarda seçilmez
+  telefon: "Belirtilmemiş",
+  whatsapp: "Belirtilmemiş",
 };
+
+/** Yeni kayıtlarda gösterilecek kaynaklar (eski anahtarlar hariç). */
+export const SECILEBILIR_KAYNAKLAR = [
+  "google_reklam",
+  "google_arama",
+  "google_harita",
+  "tavsiye",
+  "website",
+  "armut",
+  "arac_tabela",
+  "diger",
+] as const;
 
 /**
  * Tahsilat satırı + bağlı işin özeti.
@@ -136,7 +163,7 @@ export interface Tahsilat extends Odeme {
   is?: {
     hizmet_turu: string;
     ilce?: string | null;
-    musteri?: { ad: string } | null;
+    musteri?: { ad: string; kaynak?: string | null } | null;
   } | null;
 }
 

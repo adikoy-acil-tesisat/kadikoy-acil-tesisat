@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
 import { todayISO } from "@/lib/date";
-import { HIZMET_TURLERI, MAHALLELER, type Musteri } from "@/lib/types";
+import { HIZMET_TURLERI, MAHALLELER, KAYNAKLAR, SECILEBILIR_KAYNAKLAR, type Musteri } from "@/lib/types";
 
 /** Yarının tarihi, yerel saate göre. */
 function yarin(): string {
@@ -30,6 +30,12 @@ export default function HizliKayitPage() {
   const [ad, setAd] = useState("");
   const [telefon, setTelefon] = useState("");
   const [ilce, setIlce] = useState("");
+  /**
+   * Müşteri bizi nereden buldu? Hızlı kayıt sabit "telefon" yazıyordu;
+   * telefon kaynak değil kanal. Reklam parasının karşılığını görmek için
+   * tek dokunuşla sorulması gerekiyor.
+   */
+  const [kaynak, setKaynak] = useState("google_arama");
   const [adres, setAdres] = useState("");
   const [hizmetTuru, setHizmetTuru] = useState("tikaniklik_acma");
   const [aciklama, setAciklama] = useState("");
@@ -63,7 +69,7 @@ export default function HizliKayitPage() {
             telefon: telefon.trim(),
             ilce: ilce || null,
             adres: adres.trim() || null,
-            kaynak: "telefon",
+            kaynak,
           })
           .select()
           .single();
@@ -170,6 +176,26 @@ export default function HizliKayitPage() {
               <option key={i} value={i}>{i}</option>
             ))}
           </select>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nereden buldu?</label>
+        <div className="flex flex-wrap gap-2">
+          {SECILEBILIR_KAYNAKLAR.map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setKaynak(k)}
+              className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                kaynak === k
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-600 border border-gray-200"
+              }`}
+            >
+              {KAYNAKLAR[k]}
+            </button>
+          ))}
+        </div>
+      </div>
         </div>
 
         <div>

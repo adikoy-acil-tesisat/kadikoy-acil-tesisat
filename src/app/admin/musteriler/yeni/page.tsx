@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { dbHataMesaji } from "@/lib/db-error";
-import { MAHALLELER, KAYNAKLAR } from "@/lib/types";
+import { MAHALLELER, KAYNAKLAR, SECILEBILIR_KAYNAKLAR } from "@/lib/types";
 
 export default function YeniMusteriPage() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function YeniMusteriPage() {
   const [adres, setAdres] = useState("");
   const [adresTarifi, setAdresTarifi] = useState("");
   const [notlar, setNotlar] = useState("");
-  const [kaynak, setKaynak] = useState("telefon");
+  const [kaynak, setKaynak] = useState("google_arama");
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -83,7 +83,7 @@ export default function YeniMusteriPage() {
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">Nereden Buldu?</label>
           <select value={kaynak} onChange={(e) => setKaynak(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-            {Object.entries(KAYNAKLAR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            {SECILEBILIR_KAYNAKLAR.map((k) => <option key={k} value={k}>{KAYNAKLAR[k]}</option>)}
           </select>
         </div>
 
